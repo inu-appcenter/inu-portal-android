@@ -10,6 +10,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import inu.appcenter.intip_android.Page
 import inu.appcenter.intip_android.ui.component.BottomNav
 import inu.appcenter.intip_android.ui.component.WebViewScreen
@@ -17,6 +19,7 @@ import inu.appcenter.intip_android.ui.theme.INTIPTheme
 
 @Composable
 fun WebPage(
+    navController: NavController,
     modifier: Modifier = Modifier,
     page: Page,
 ) {
@@ -25,7 +28,7 @@ fun WebPage(
 
     Scaffold(
         bottomBar = {
-            BottomNav()
+            BottomNav(navController)
         },
     ) { paddingValue ->
         WebViewScreen(
@@ -37,7 +40,7 @@ fun WebPage(
                     top = paddingValue.calculateTopPadding(),
                     bottom = 0.dp
                 ),
-            url = "${WEB_BASE_URL}/${page.route}"
+            url = "${WEB_BASE_URL}/${page.route!!}"
         )
     }
 }
@@ -46,6 +49,6 @@ fun WebPage(
 @Composable
 fun PagePreview() {
     INTIPTheme {
-        WebPage(page = Page.Home)
+        WebPage(navController = rememberNavController(), page = Page.Home)
     }
 }

@@ -1,6 +1,7 @@
 package inu.appcenter.intip_android.ui.component
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -25,11 +26,13 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import inu.appcenter.intip_android.Page
 import inu.appcenter.intip_android.ui.theme.INTIPTheme
 
 @Composable
-fun BottomNav() {
+fun BottomNav(navController: NavController) {
     //todo: 아이콘 변경
     val bottomSheetItem = listOf<Pair<ImageVector, Page>>(
         Icons.Default.Home to Page.Home,
@@ -48,9 +51,12 @@ fun BottomNav() {
     ) {
         for (item in bottomSheetItem) {
             BottomItem(
+                modifier = Modifier.clickable {
+                    navController.navigate(item.second.name)
+                },
                 icon = item.first,
                 text = item.second.label,
-                isSelected = item.second.navigation == Page.Home.navigation
+                isSelected = item.second.name == navController.currentDestination?.route
             )
         }
     }
@@ -58,6 +64,7 @@ fun BottomNav() {
 
 @Composable
 fun BottomItem(
+    modifier: Modifier = Modifier,
     icon: ImageVector,
     text: String,
     isSelected: Boolean
@@ -65,9 +72,9 @@ fun BottomItem(
     val tintColor = if (isSelected) Color(0xff4071B9) else Color(0xffD6D1D5)
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .drawBehind {
-                if(isSelected) {
+                if (isSelected) {
                     val strokeWidth = 4.dp.toPx()
                     val color = Color(0xff4071B9)
 
@@ -101,6 +108,6 @@ fun BottomItem(
 @Composable
 fun BottomNavPreview() {
     INTIPTheme {
-        BottomNav()
+        BottomNav(rememberNavController())
     }
 }
