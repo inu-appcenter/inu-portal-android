@@ -7,6 +7,9 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -14,6 +17,9 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import inu.appcenter.intip_android.ui.component.BottomNav
 import inu.appcenter.intip_android.ui.theme.INTIPTheme
@@ -27,10 +33,17 @@ class MainActivity : ComponentActivity() {
                 Scaffold(
                     bottomBar = {
                         BottomNav()
-                    }
-                ) {_ ->
+                    },
+                ) { paddingValue ->
                     Column(
                         modifier = Modifier
+                            .fillMaxSize()
+                            .padding(
+                                start = paddingValue.calculateStartPadding(LayoutDirection.Ltr),
+                                end = paddingValue.calculateEndPadding(LayoutDirection.Rtl),
+                                top = paddingValue.calculateTopPadding(),
+                                bottom = 0.dp
+                            )
                     ) {
                         WebViewScreen()
                     }
