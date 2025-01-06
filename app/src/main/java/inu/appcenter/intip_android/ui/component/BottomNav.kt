@@ -1,13 +1,11 @@
 package inu.appcenter.intip_android.ui.component
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Create
@@ -24,21 +22,20 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.ModifierInfo
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import inu.appcenter.intip_android.Route
+import inu.appcenter.intip_android.Page
 import inu.appcenter.intip_android.ui.theme.INTIPTheme
 
 @Composable
 fun BottomNav() {
     //todo: 아이콘 변경
-    val bottomSheetItem = listOf<Pair<ImageVector, Route>>(
-        Icons.Default.Home to Route.Home,
-        Icons.Default.Email to Route.Save,
-        Icons.Default.Create to Route.Write,
-        Icons.Default.Person to Route.MyPage
+    val bottomSheetItem = listOf<Pair<ImageVector, Page>>(
+        Icons.Default.Home to Page.Home,
+        Icons.Default.Email to Page.Save,
+        Icons.Default.Create to Page.Write,
+        Icons.Default.Person to Page.MyPage
     )
 
     val shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
@@ -53,7 +50,7 @@ fun BottomNav() {
             BottomItem(
                 icon = item.first,
                 text = item.second.label,
-                isSelected = item.second.route == Route.Home.route
+                isSelected = item.second.navigation == Page.Home.navigation
             )
         }
     }
