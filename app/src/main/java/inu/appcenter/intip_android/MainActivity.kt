@@ -6,6 +6,8 @@ import android.webkit.WebViewClient
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -26,10 +28,12 @@ class MainActivity : ComponentActivity() {
                     bottomBar = {
                         BottomNav()
                     }
-                ) {
-                    WebViewScreen(
-                        modifier = Modifier.padding(it)
-                    )
+                ) {_ ->
+                    Column(
+                        modifier = Modifier
+                    ) {
+                        WebViewScreen()
+                    }
                 }
             }
         }
@@ -41,12 +45,15 @@ fun WebViewScreen(
     modifier: Modifier = Modifier
 ) {
     Icons.Default.Add
-    AndroidView(factory = { context ->
-        WebView(context).apply {
-            settings.javaScriptEnabled = true // 필요하다면 JS 활성화
-            settings.domStorageEnabled = true // 필요하다면 DOM 저장소 활성화
-            webViewClient = WebViewClient()   // 외부 브라우저로 안 나가게
-            loadUrl("https://intip.inuappcenter.kr/app/home")
+    AndroidView(
+        modifier = modifier.fillMaxSize(),
+        factory = { context ->
+            WebView(context).apply {
+                settings.javaScriptEnabled = true // 필요하다면 JS 활성화
+                settings.domStorageEnabled = true // 필요하다면 DOM 저장소 활성화
+                webViewClient = WebViewClient()   // 외부 브라우저로 안 나가게
+                loadUrl("https://intip.inuappcenter.kr/app/home")
+            }
         }
-    })
+    )
 }
