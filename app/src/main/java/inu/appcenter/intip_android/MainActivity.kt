@@ -1,20 +1,19 @@
 package inu.appcenter.intip_android
 
 import android.os.Bundle
-import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.viewinterop.AndroidView
+import inu.appcenter.intip_android.ui.component.BottomNav
 import inu.appcenter.intip_android.ui.theme.INTIPTheme
 
 class MainActivity : ComponentActivity() {
@@ -23,14 +22,25 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             INTIPTheme {
-                WebViewScreen()
+                Scaffold(
+                    bottomBar = {
+                        BottomNav()
+                    }
+                ) {
+                    WebViewScreen(
+                        modifier = Modifier.padding(it)
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-fun WebViewScreen() {
+fun WebViewScreen(
+    modifier: Modifier = Modifier
+) {
+    Icons.Default.Add
     AndroidView(factory = { context ->
         WebView(context).apply {
             settings.javaScriptEnabled = true // 필요하다면 JS 활성화
@@ -40,4 +50,3 @@ fun WebViewScreen() {
         }
     })
 }
-
