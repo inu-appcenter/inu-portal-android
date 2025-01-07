@@ -19,25 +19,25 @@ fun MyApp(modifier: Modifier = Modifier) {
         composable(AllDestination.Main.route) {
             WebViewScreen(
                 navController = navController,
-                url = "https://intip.inuappcenter.kr/app/home"
+                path = "home"
             )
         }
         composable(AllDestination.Save.route) {
             WebViewScreen(
                 navController = navController,
-                url = "https://intip.inuappcenter.kr/app/save"
+                path = "save"
             )
         }
         composable(AllDestination.Write.route) {
             WebViewScreen(
                 navController = navController,
-                url = "https://intip.inuappcenter.kr/app/write"
+                path = "write"
             )
         }
         composable(AllDestination.MyPage.route) {
             WebViewScreen(
                 navController = navController,
-                url = "https://intip.inuappcenter.kr/app/mypage"
+                path = "mypage"
             )
         }
     }

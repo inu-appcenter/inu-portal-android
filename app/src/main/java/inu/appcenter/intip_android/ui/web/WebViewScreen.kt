@@ -11,7 +11,10 @@ import androidx.navigation.NavHostController
 import inu.appcenter.intip_android.ui.component.AppBottomBar
 
 @Composable
-fun WebViewScreen(modifier: Modifier = Modifier, navController: NavHostController, url: String) {
+fun WebViewScreen(modifier: Modifier = Modifier, navController: NavHostController, path: String) {
+    //todo: 나중에 전역 변수나 env로 빼기
+    val WEB_BASE_URL = "https://intip.inuappcenter.kr/app"
+
     Scaffold(
         bottomBar = {
             AppBottomBar(navController)
@@ -34,7 +37,7 @@ fun WebViewScreen(modifier: Modifier = Modifier, navController: NavHostControlle
                     settings.displayZoomControls = false
 
                     webViewClient = WebViewClient()
-                    loadUrl(url)
+                    loadUrl("${WEB_BASE_URL}/${path}")
                 }
             })
     }
