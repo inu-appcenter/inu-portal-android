@@ -19,6 +19,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -41,10 +43,10 @@ fun AppBottomBar(
     navController: NavHostController
 ) {
     val screens = listOf<Pair<AllDestination, @DrawableRes Int>>(
-        AllDestination.Main to R.drawable.icon_home_active ,
-        AllDestination.Save to R.drawable.icon_save ,
-        AllDestination.Write to R.drawable.icon_write ,
-        AllDestination.MyPage to R.drawable.icon_profile ,
+        AllDestination.Main to R.drawable.icon_home_active,
+        AllDestination.Save to R.drawable.icon_save,
+        AllDestination.Write to R.drawable.icon_write,
+        AllDestination.MyPage to R.drawable.icon_profile,
     )
 
     val shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
@@ -68,22 +70,38 @@ fun AppBottomBar(
             val icon = item.second
 
             NavigationBarItem(
+                modifier = Modifier
+                    .drawBehind {
+                        if (currentDestination?.route == screen.route) {
+                            val strokeWidth =  5.dp.toPx()
+                            val color = Color(0xff4071B9)
+
+                            drawLine(
+                                color = color,
+                                start = Offset(x = 64f, y = 0f),
+                                end = Offset(size.width - 64f, y = 0f),
+                                strokeWidth = strokeWidth
+                            )
+                        }
+                    },
                 icon = {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(6.89.dp) // 여기서 간격을 조절합니다
-                    ) {
-                        Icon(
-                            painter = painterResource(icon),
-                            contentDescription = screen.route,
-                            modifier = Modifier.size(21.dp)
-                        )
-                        Text(
-                            text = screen.label,
-                            style = MaterialTheme.typography.labelSmall
-                            //todo: 폰트 변경해야함!!
-                        )
-                    }
+                    Icon(
+                        painter = painterResource(icon),
+                        contentDescription = screen.route,
+                        modifier = Modifier.size(21.dp)
+                    )
+//                    Column(
+//                        horizontalAlignment = Alignment.CenterHorizontally,
+//                        verticalArrangement = Arrangement.spacedBy(6.89.dp) // 여기서 간격을 조절합니다
+//                    ) {
+//                    }
+                },
+                label = {
+                    Text(
+                        text = screen.label,
+                        style = MaterialTheme.typography.labelSmall
+                        //todo: 폰트 변경해야함!!
+                    )
                 },
                 selected = currentDestination?.route == screen.route,
                 onClick = {
@@ -104,7 +122,6 @@ fun AppBottomBar(
                     indicatorColor = Color.Transparent
                 ),
                 interactionSource = remember { MutableInteractionSource() },
-                label = {},
             )
         }
     }
