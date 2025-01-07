@@ -12,7 +12,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import inu.appcenter.intip_android.ui.navigate.px
+import inu.appcenter.intip_android.ui.component.px
 
 fun Modifier.shadowCustom(
     color: Color = Color.Black,

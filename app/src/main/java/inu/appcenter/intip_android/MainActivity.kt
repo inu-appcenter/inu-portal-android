@@ -4,25 +4,17 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.animation.EnterTransition
-import androidx.compose.animation.ExitTransition
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.navigation
-import androidx.navigation.compose.rememberNavController
-import inu.appcenter.intip_android.ui.page.WebPage
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
-import inu.appcenter.intip_android.ui.main.MainScreen
 import inu.appcenter.intip_android.ui.theme.INTIPTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        //todo: 시스템 바를 콘텐츠 뒤에 그리도록 설정
+        //시스템 바를 콘텐츠 뒤에 그리도록 설정
         WindowCompat.setDecorFitsSystemWindows(window, false)
         setContent {
             val view = LocalView.current
@@ -38,8 +30,7 @@ class MainActivity : ComponentActivity() {
             }
 
             INTIPTheme {
-                val navController = rememberNavController()
-                MainScreen()
+                MyApp()
 //                NavHost(
 //                    navController = navController,
 //                    startDestination = Page.Main.name,
@@ -68,4 +59,5 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+
 //"https://intip.inuappcenter.kr/app/home"

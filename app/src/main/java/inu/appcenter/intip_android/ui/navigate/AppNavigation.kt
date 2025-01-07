@@ -12,22 +12,4 @@ fun AppNavigation(
     navController: NavHostController,
     modifier: Modifier = Modifier
 ) {
-    NavHost(
-        navController = navController,
-        startDestination = AllDestination.Main.route,
-        modifier = modifier
-    ) {
-        composable(AllDestination.Main.route) {
-            WebViewScreen(url = "https://intip.inuappcenter.kr/app/home")
-        }
-        composable(AllDestination.Save.route) {
-            WebViewScreen(url = "https://intip.inuappcenter.kr/app/save")
-        }
-        composable(AllDestination.Write.route) {
-            WebViewScreen(url = "https://intip.inuappcenter.kr/app/write")
-        }
-        composable(AllDestination.MyPage.route) {
-            WebViewScreen(url = "https://intip.inuappcenter.kr/app/mypage")
-        }
-    }
 }

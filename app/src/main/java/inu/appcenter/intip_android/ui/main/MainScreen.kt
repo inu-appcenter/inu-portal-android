@@ -5,7 +5,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.rememberNavController
-import inu.appcenter.intip_android.ui.navigate.AppBottomBar
+import inu.appcenter.intip_android.ui.component.AppBottomBar
 import inu.appcenter.intip_android.ui.navigate.AppNavigation
 
 @Composable
