@@ -16,6 +16,7 @@ fun MyApp(modifier: Modifier = Modifier) {
         startDestination = AllDestination.Main.route,
         modifier = modifier
     ) {
+        //todo: 나중에 WebViewScreen들은 반복문으로 관리하면 좋을듯
         composable(AllDestination.Main.route) {
             WebViewScreen(
                 navController = navController,
