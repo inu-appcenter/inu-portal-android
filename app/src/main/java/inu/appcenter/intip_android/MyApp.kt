@@ -19,25 +19,25 @@ fun MyApp(modifier: Modifier = Modifier) {
         composable(AllDestination.Main.route) {
             WebViewScreen(
                 navController = navController,
-                path = "home"
+                path = "/home"
             )
         }
         composable(AllDestination.Save.route) {
             WebViewScreen(
                 navController = navController,
-                path = "save"
+                path = "/save"
             )
         }
         composable(AllDestination.Write.route) {
             WebViewScreen(
                 navController = navController,
-                path = "write"
+                path = "/write"
             )
         }
         composable(AllDestination.MyPage.route) {
             WebViewScreen(
                 navController = navController,
-                path = "mypage"
+                path = "/mypage"
             )
         }
     }

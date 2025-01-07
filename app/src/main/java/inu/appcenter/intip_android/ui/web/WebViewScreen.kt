@@ -37,7 +37,7 @@ fun WebViewScreen(modifier: Modifier = Modifier, navController: NavHostControlle
                     settings.displayZoomControls = false
 
                     webViewClient = WebViewClient()
-                    loadUrl("${WEB_BASE_URL}/${path}")
+                    loadUrl("${WEB_BASE_URL}${path}")
                 }
             })
     }
