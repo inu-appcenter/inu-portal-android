@@ -29,7 +29,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import inu.appcenter.intip_android.R
-import inu.appcenter.intip_android.ui.modifier.shadowCustom
+import inu.appcenter.intip_android.ui.shadowCustom
 import inu.appcenter.intip_android.ui.navigate.AllDestination
 import inu.appcenter.intip_android.ui.theme.Blue_9CAFE2
 import inu.appcenter.intip_android.ui.theme.Gray_D6D1D5

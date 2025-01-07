@@ -1,4 +1,4 @@
-package inu.appcenter.intip_android.ui.modifier
+package inu.appcenter.intip_android.ui
 
 import android.graphics.BlurMaskFilter
 import androidx.compose.runtime.remember
