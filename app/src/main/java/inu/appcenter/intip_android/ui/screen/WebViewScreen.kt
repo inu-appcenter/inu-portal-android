@@ -1,4 +1,4 @@
-package inu.appcenter.intip_android.ui.web
+package inu.appcenter.intip_android.ui.screen
 
 import android.webkit.WebView
 import android.webkit.WebViewClient
