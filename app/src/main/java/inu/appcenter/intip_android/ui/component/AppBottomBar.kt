@@ -74,7 +74,7 @@ fun AppBottomBar(
                     .drawBehind {
                         if (currentDestination?.route == screen.route) {
                             val strokeWidth =  5.dp.toPx()
-                            val color = Color(0xff4071B9)
+                            val color = Purple_4071B9
 
                             drawLine(
                                 color = color,

@@ -14,8 +14,6 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        //시스템 바를 콘텐츠 뒤에 그리도록 설정
-        WindowCompat.setDecorFitsSystemWindows(window, false)
         setContent {
             val view = LocalView.current
 
@@ -61,3 +59,4 @@ class MainActivity : ComponentActivity() {
 }
 
 //"https://intip.inuappcenter.kr/app/home"
+

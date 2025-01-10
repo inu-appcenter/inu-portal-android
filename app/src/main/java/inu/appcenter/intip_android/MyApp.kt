@@ -6,7 +6,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import inu.appcenter.intip_android.ui.navigate.AllDestination
-import inu.appcenter.intip_android.ui.web.WebViewScreen
+import inu.appcenter.intip_android.ui.screen.WebViewScreen
 
 @Composable
 fun MyApp(modifier: Modifier = Modifier) {
