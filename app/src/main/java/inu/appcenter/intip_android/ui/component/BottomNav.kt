@@ -28,7 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import inu.appcenter.intip_android.Page
+import inu.appcenter.intip_android.ui.navigate.Page
 import inu.appcenter.intip_android.ui.theme.INTIPTheme
 
 @Composable

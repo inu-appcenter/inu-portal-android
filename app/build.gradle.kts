@@ -71,5 +71,21 @@ dependencies {
     // Navigation
     implementation(libs.androidx.navigation.compose)
 
+    // DataStore
+    implementation(libs.androidx.datastore.preferences)
 
+    // Retrofit2
+    implementation(libs.retrofit)
+    implementation(libs.converter.gson)
+    implementation(libs.logging.interceptor)
+
+    // Gson
+    implementation(libs.gson)
+
+    // ViewModel
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+
+    // Koin(DI)
+    implementation(libs.koin.android)
+    implementation(libs.koin.androidx.compose)
 }

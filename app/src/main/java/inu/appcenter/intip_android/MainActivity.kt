@@ -8,6 +8,7 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import inu.appcenter.intip_android.ui.navigate.MyApp
 import inu.appcenter.intip_android.ui.theme.INTIPTheme
 
 class MainActivity : ComponentActivity() {

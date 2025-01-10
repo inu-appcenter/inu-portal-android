@@ -3,8 +3,6 @@ package inu.appcenter.intip_android.ui.component
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -17,7 +15,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
@@ -31,7 +28,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import inu.appcenter.intip_android.R
-import inu.appcenter.intip_android.ui.shadowCustom
+import inu.appcenter.intip_android.ui.utils.shadowCustom
 import inu.appcenter.intip_android.ui.navigate.AllDestination
 import inu.appcenter.intip_android.ui.theme.Blue_9CAFE2
 import inu.appcenter.intip_android.ui.theme.Gray_D6D1D5

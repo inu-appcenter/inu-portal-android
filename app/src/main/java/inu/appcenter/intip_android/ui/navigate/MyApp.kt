@@ -1,11 +1,10 @@
-package inu.appcenter.intip_android
+package inu.appcenter.intip_android.ui.navigate
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import inu.appcenter.intip_android.ui.navigate.AllDestination
 import inu.appcenter.intip_android.ui.screen.WebViewScreen
 
 @Composable

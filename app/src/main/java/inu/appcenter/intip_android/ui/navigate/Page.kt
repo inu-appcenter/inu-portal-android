@@ -1,4 +1,4 @@
-package inu.appcenter.intip_android
+package inu.appcenter.intip_android.ui.navigate
 
 enum class Page(
     val label: String, // 페이지 이름
