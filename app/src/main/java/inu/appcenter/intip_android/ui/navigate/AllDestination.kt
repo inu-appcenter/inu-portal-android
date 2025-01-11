@@ -5,4 +5,5 @@ sealed class AllDestination(val route: String, val label: String, val webPath : 
     data object Save : AllDestination("save", "저장소", "/save")
     data object Write : AllDestination("write", "작성", "/write")
     data object MyPage : AllDestination("myPage", "마이페이지", "/mypage")
+    data object Login : AllDestination("login", "로그인")
 }
