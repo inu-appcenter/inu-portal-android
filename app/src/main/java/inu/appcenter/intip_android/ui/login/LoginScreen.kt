@@ -32,6 +32,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import inu.appcenter.intip_android.model.member.LoginDto
+import inu.appcenter.intip_android.ui.login.util.IconTextField
 
 @Composable
 fun LoginScreen(
@@ -66,54 +67,23 @@ fun LoginScreen(
             .padding(16.dp),
         verticalArrangement = Arrangement.Center
     ) {
-        // 첫 번째 Row - 학번 입력
-        OutlinedTextField(
+        // 첫 번째 IconTextField (학번)
+        IconTextField(
             value = authUiState.loginId,
             onValueChange = { authViewModel.setLoginId(it) },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
-            placeholder = { Text("학번", color = Color.Gray) },
-            leadingIcon = {
-                Icon(
-                    imageVector = Icons.Default.Person,
-                    contentDescription = "Student ID Icon",
-                    tint = Color.Gray
-                )
-            },
-            singleLine = true
+            placeholder = "학번",
+            leadingIcon = Icons.Default.Person
         )
 
-        // 두 번째 Row - 비밀번호 입력
-        OutlinedTextField(
+        // 두 번째 IconTextField (비밀번호)
+        IconTextField(
             value = authUiState.loginPw,
             onValueChange = { authViewModel.setLoginPw(it) },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
-            placeholder = { Text("비밀번호", color = Color.Gray) },
-            leadingIcon = {
-                Icon(
-                    imageVector = Icons.Default.Lock,
-                    contentDescription = "Password Icon",
-                    tint = Color.Gray
-                )
-            },
-            trailingIcon = {
-                val image = if (passwordVisible)
-                    Icons.Filled.Visibility
-                else Icons.Filled.VisibilityOff
-
-                IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                    Icon(
-                        imageVector = image,
-                        contentDescription = if (passwordVisible) "Hide Password" else "Show Password",
-                        tint = Color.Gray
-                    )
-                }
-            },
-            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-            singleLine = true
+            placeholder = "비밀번호",
+            leadingIcon = Icons.Default.Lock,
+            trailingIcon = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+            onTrailingIconClick = { passwordVisible = !passwordVisible },
+            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation()
         )
 
         // 로그인 버튼
