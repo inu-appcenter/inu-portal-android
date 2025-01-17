@@ -13,6 +13,8 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
@@ -39,10 +41,18 @@ fun WebViewScreen(modifier: Modifier = Modifier, navController: NavHostControlle
     Scaffold(
         bottomBar = {
             AppBottomBar(navController)
-        }
+        },
+        containerColor = Color.Red
     ) { paddingValue ->
+        val newPaddingValue = PaddingValues(
+            start = paddingValue.calculateStartPadding(LayoutDirection.Ltr),
+            end = paddingValue.calculateEndPadding(LayoutDirection.Rtl),
+            top = 0.dp,
+            bottom = paddingValue.calculateBottomPadding() - 20.dp,
+            // Scafflod의 기본 BottomPadding에서 BottomNavigation의 둥근 정도를 뺀 값
+        )
         CustomAndroidView(
-            paddingValue = paddingValue,
+            modifier = Modifier.padding(newPaddingValue),
             path = path
         )
 

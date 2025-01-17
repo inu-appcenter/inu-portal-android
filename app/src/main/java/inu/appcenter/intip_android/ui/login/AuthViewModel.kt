@@ -26,8 +26,8 @@ sealed class AuthState {
 data class AuthUiState(
     val loginState: AuthState = AuthState.Idle,
     val logoutState: AuthState = AuthState.Idle,
-    val loginId: String = "202001544",
-    val loginPw: String = "dlwnsgml109!",
+    val loginId: String = "",
+    val loginPw: String = "",
     val saveTokenState: Boolean? = null,
     val hasToken: Boolean? = null
 )

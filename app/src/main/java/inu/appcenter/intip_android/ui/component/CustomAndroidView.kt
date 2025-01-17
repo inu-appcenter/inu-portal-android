@@ -14,14 +14,14 @@ import androidx.compose.ui.viewinterop.AndroidView
 
 @Composable
 fun CustomAndroidView(
-    paddingValue: PaddingValues,
+    modifier: Modifier = Modifier,
     path: String
 ){
     val WEB_BASE_URL = "https://intip.inuappcenter.kr/app"
 
 
     AndroidView(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .padding(),
         factory = { context ->
