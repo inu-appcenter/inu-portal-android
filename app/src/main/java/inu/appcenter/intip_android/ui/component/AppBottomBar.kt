@@ -16,7 +16,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
@@ -51,13 +53,9 @@ fun AppBottomBar(
         containerColor = Color.White,
         modifier = Modifier
             .fillMaxWidth()
+            .shadow(12.dp, shape)
+            .clip(shape)
             .background(color = Color(0xffffffff), shape = shape)
-            .shadowCustom(
-                color = Color(0xff190000).copy(alpha = 0.1f),
-                offsetX = (-3).dp,
-                offsetY = 0.dp,
-                blurRadius = 10.dp,
-            )
     ) {
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentDestination = navBackStackEntry?.destination

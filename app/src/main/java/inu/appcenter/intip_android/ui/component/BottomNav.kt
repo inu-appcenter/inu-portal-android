@@ -45,7 +45,7 @@ fun BottomNav(navController: NavController) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .shadow(3.dp, shape)
+            .shadow(12.dp, shape)
             .background(color = Color(0xffffffff), shape = shape),
         horizontalArrangement = Arrangement.SpaceAround,
     ) {
