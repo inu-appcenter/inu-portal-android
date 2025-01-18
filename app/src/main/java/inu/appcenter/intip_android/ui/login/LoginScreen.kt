@@ -3,8 +3,10 @@ package inu.appcenter.intip_android.ui.login
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lock
@@ -13,12 +15,7 @@ import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -27,12 +24,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import inu.appcenter.intip_android.model.member.LoginDto
 import inu.appcenter.intip_android.ui.login.util.IconTextField
+import kotlinx.coroutines.flow.MutableStateFlow
 
 @Composable
 fun LoginScreen(
@@ -64,7 +62,7 @@ fun LoginScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
+            .padding(32.dp),
         verticalArrangement = Arrangement.Center
     ) {
         // 첫 번째 IconTextField (학번)
@@ -74,6 +72,8 @@ fun LoginScreen(
             placeholder = "학번",
             leadingIcon = Icons.Default.Person
         )
+
+        Spacer(Modifier.height(32.dp))
 
         // 두 번째 IconTextField (비밀번호)
         IconTextField(
@@ -86,6 +86,8 @@ fun LoginScreen(
             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation()
         )
 
+        Spacer(Modifier.height(48.dp))
+
         // 로그인 버튼
         Button(
             onClick = {
@@ -96,9 +98,7 @@ fun LoginScreen(
                     )
                 )
             },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 16.dp),
+            modifier = Modifier.fillMaxWidth(),
             enabled = authUiState.loginState != AuthState.Loading
         ) {
             Text(text = "로그인")
@@ -115,4 +115,3 @@ fun LoginScreen(
         }
     }
 }
-
