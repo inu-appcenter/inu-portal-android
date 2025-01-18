@@ -16,3 +16,5 @@ val Blue_9CAFE2 = Color(0xFF9CAFE2)
 val Blue_B5C5F2 = Color(0xFFB5C5F2)
 
 val Gray_D6D1D5 = Color(0xFFD6D1D5)
+val Gray_969696 = Color(0xFF969696)
+val Gray_BDBDBD = Color(0xFFBDBDBD)

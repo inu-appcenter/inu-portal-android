@@ -2,6 +2,7 @@ package inu.appcenter.intip_android.ui.login
 
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,12 +11,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -27,17 +22,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.ImageLoader
 import coil.compose.AsyncImage
 import coil.decode.SvgDecoder
+import inu.appcenter.intip_android.R
 import inu.appcenter.intip_android.model.member.LoginDto
 import inu.appcenter.intip_android.ui.login.util.AgreementText
-import inu.appcenter.intip_android.ui.login.util.IconTextField
+import inu.appcenter.intip_android.ui.login.util.LoginButton
+import inu.appcenter.intip_android.ui.login.util.LoginPageTextField
 
 @Composable
 fun LoginScreen(
@@ -60,10 +56,12 @@ fun LoginScreen(
                 // 로그인 성공 시
                 onLoginSuccess()
             }
+
             is AuthState.Error -> {
                 // 로그인 실패 시
                 onLoginError(state.message)
             }
+
             else -> {
                 // Idle, Loading 등 다른 상태는 여기서 특별 조치 없음
             }
@@ -80,39 +78,45 @@ fun LoginScreen(
             model = "https://intip.inuappcenter.kr/assets/logo-with-text-BXx_GfoJ.svg",
             contentDescription = "INTIP Logo",
             imageLoader = imageLoader,
-            modifier = Modifier.align(Alignment.CenterHorizontally).padding(start = 6.dp)
+            modifier = Modifier
+                .align(Alignment.CenterHorizontally)
+                .padding(start = 6.dp)
         )
         Spacer(Modifier.height(90.dp))
 
-        Text(text = "인천대학교 포털시스템 계정으로 로그인 할 수 있습니다.", fontSize = 12.sp)
+        Text(text = "인천대학교 포털시스템 계정으로 로그인 할 수 있습니다.", fontSize = 12.9.sp)
 
         Spacer(Modifier.height(10.dp))
 
+        Text(text = "학번", fontSize = 18.sp)
+
         // 첫 번째 IconTextField (학번)
-        IconTextField(
+        LoginPageTextField(
             value = authUiState.loginId,
             onValueChange = { authViewModel.setLoginId(it) },
-            placeholder = "학번",
-            leadingIcon = Icons.Default.Person
+            labelText = "예) 202100000",
+            iconResource = R.drawable.icon_studentid, // 학번 아이콘
+            isPassword = false  // 일반 텍스트 필드
         )
 
         Spacer(Modifier.height(32.dp))
 
+        Text(text = "비밀번호", fontSize = 18.sp)
+
         // 두 번째 IconTextField (비밀번호)
-        IconTextField(
+        LoginPageTextField(
             value = authUiState.loginPw,
             onValueChange = { authViewModel.setLoginPw(it) },
-            placeholder = "비밀번호",
-            leadingIcon = Icons.Default.Lock,
-            trailingIcon = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-            onTrailingIconClick = { passwordVisible = !passwordVisible },
-            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation()
+            labelText = "비밀번호",
+            iconResource = R.drawable.icon_password, // 비밀번호 아이콘
+            isPassword = true,
+            passwordVisible = passwordVisible,
+            onPasswordToggle = { passwordVisible = !passwordVisible }
         )
 
         Spacer(Modifier.height(48.dp))
 
-        // 로그인 버튼
-        Button(
+        LoginButton(
             onClick = {
                 authViewModel.login(
                     LoginDto(
@@ -121,11 +125,8 @@ fun LoginScreen(
                     )
                 )
             },
-            modifier = Modifier.fillMaxWidth(),
-            enabled = authUiState.loginState != AuthState.Loading
-        ) {
-            Text(text = "로그인")
-        }
+            text = "로그인"
+        )
 
         Spacer(Modifier.height(16.dp))
 

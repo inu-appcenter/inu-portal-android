@@ -45,7 +45,7 @@ fun AgreementText(
             annotation = "https://intip.inuappcenter.kr/privacy-policy.html"
         )
         withStyle(
-            style = SpanStyle(color = Color.Blue, textDecoration = TextDecoration.Underline)
+            style = SpanStyle(color = Color.Magenta, textDecoration = TextDecoration.Underline)
         ) {
             append("개인정보 처리지침")
         }
