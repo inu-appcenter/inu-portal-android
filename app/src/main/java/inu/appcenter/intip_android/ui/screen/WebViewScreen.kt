@@ -36,7 +36,7 @@ import inu.appcenter.intip_android.ui.component.CustomAndroidView
 @Composable
 fun WebViewScreen(modifier: Modifier = Modifier, navController: NavHostController, path: String) {
     //todo: 나중에 전역 변수나 env로 빼기
-    val WEB_BASE_URL = "https://intip.inuappcenter.kr/app"
+    //val WEB_BASE_URL = "https://intip.inuappcenter.kr/app"
 
     Scaffold(
         bottomBar = {

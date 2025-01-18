@@ -46,12 +46,6 @@ fun CustomAndroidView(
 
 
                 webChromeClient = object : WebChromeClient() {
-                    /**
-                     * 콘솔 메시지를 캡처하기 위해 오버라이드
-                     */
-                    /**
-                     * 콘솔 메시지를 캡처하기 위해 오버라이드
-                     */
                     override fun onConsoleMessage(consoleMessage: ConsoleMessage): Boolean {
                         // 원하는 대로 처리(필터링, 로깅 등)
                         Log.d(

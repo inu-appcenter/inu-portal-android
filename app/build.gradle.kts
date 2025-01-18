@@ -89,7 +89,10 @@ dependencies {
     implementation(libs.koin.android)
     implementation(libs.koin.androidx.compose)
 
-    // Coil
-    implementation (libs.coil.compose)
-    implementation (libs.coil.svg)
+    // Coil core
+    implementation(libs.coil)
+    // Coil for Compose
+    implementation(libs.coil.compose.v240)
+    // Coil SVG support
+    implementation(libs.coil.svg.v240)
 }

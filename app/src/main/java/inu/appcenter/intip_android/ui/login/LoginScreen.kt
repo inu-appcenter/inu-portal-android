@@ -1,5 +1,7 @@
 package inu.appcenter.intip_android.ui.login
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -23,14 +25,19 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import coil.ImageLoader
+import coil.compose.AsyncImage
+import coil.decode.SvgDecoder
 import inu.appcenter.intip_android.model.member.LoginDto
+import inu.appcenter.intip_android.ui.login.util.AgreementText
 import inu.appcenter.intip_android.ui.login.util.IconTextField
-import kotlinx.coroutines.flow.MutableStateFlow
 
 @Composable
 fun LoginScreen(
@@ -39,6 +46,12 @@ fun LoginScreen(
     onLoginError: (String) -> Unit
 ) {
     val authUiState by authViewModel.uiState.collectAsState()
+    val context = LocalContext.current
+    var passwordVisible by remember { mutableStateOf(false) }
+    // SVG 디코딩을 위한 ImageLoader 구성
+    val imageLoader = ImageLoader.Builder(context)
+        .components { add(SvgDecoder.Factory()) }
+        .build()
 
     // 로그인 성공/실패 감지
     LaunchedEffect(authUiState.loginState) {
@@ -57,14 +70,24 @@ fun LoginScreen(
         }
     }
 
-    var passwordVisible by remember { mutableStateOf(false) }
-
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(32.dp),
         verticalArrangement = Arrangement.Center
     ) {
+        AsyncImage(
+            model = "https://intip.inuappcenter.kr/assets/logo-with-text-BXx_GfoJ.svg",
+            contentDescription = "INTIP Logo",
+            imageLoader = imageLoader,
+            modifier = Modifier.align(Alignment.CenterHorizontally).padding(start = 6.dp)
+        )
+        Spacer(Modifier.height(90.dp))
+
+        Text(text = "인천대학교 포털시스템 계정으로 로그인 할 수 있습니다.", fontSize = 12.sp)
+
+        Spacer(Modifier.height(10.dp))
+
         // 첫 번째 IconTextField (학번)
         IconTextField(
             value = authUiState.loginId,
@@ -103,6 +126,14 @@ fun LoginScreen(
         ) {
             Text(text = "로그인")
         }
+
+        Spacer(Modifier.height(16.dp))
+
+        AgreementText(onOpenUrl = { url ->
+            // 클릭한 URL을 Intent로 처리합니다.
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+            context.startActivity(intent)
+        })
 
         // 로딩 상태 표시 예시
         if (authUiState.loginState == AuthState.Loading) {
