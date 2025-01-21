@@ -40,8 +40,16 @@ class AuthViewModel(
     private val _uiState = MutableStateFlow(AuthUiState())
     val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
 
+    // tokenFlow를 외부에 공개합니다.
+    val tokenFlow = dataStoreManager.token
+
     init {
         observeToken()
+        viewModelScope.launch {
+            tokenFlow.collect { token ->
+                Log.d("AuthViewModel", "Current token in DataStore: $token")
+            }
+        }
     }
 
     private fun observeToken() {
@@ -77,32 +85,28 @@ class AuthViewModel(
         viewModelScope.launch {
             try {
                 _uiState.update { it.copy(loginState = AuthState.Loading) }
-
                 val response = memberRepository.login(loginDto)
                 if (response.isSuccessful) {
-                    val tokenResponse = response.body() ?: throw Exception("로그인 정보가 비어있습니다.")
-                    dataStoreManager.saveToken(tokenResponse.accessToken)
+                    val loginResponse = response.body() ?: throw Exception("로그인 응답이 비어있습니다.")
+                    // 성공한 경우 data에 TokenDto 객체가 존재
+                    val tokenDto = loginResponse.data
+                        ?: throw Exception(loginResponse.msg ?: "로그인 실패")
+
+                    Log.d("AuthViewModel", "Received token: ${tokenDto.accessToken}")
+                    dataStoreManager.saveToken(tokenDto.accessToken)
                     _uiState.update { it.copy(loginState = AuthState.Success) }
                 } else {
-                    throw Exception(response.errorBody()?.string())
+                    throw Exception(response.errorBody()?.string() ?: "알 수 없는 에러")
                 }
             } catch (e: Exception) {
-                Log.e("login", e.message.toString())
+                Log.e("login", e.message ?: "error")
                 _uiState.update {
-                    it.copy(
-                        loginState = AuthState.Error(e.message ?: UNKNOWN_ERROR)
-                    )
-                }
-            } catch (e: RuntimeException) {
-                Log.e("login timeout", e.message.toString())
-                _uiState.update {
-                    it.copy(
-                        loginState = AuthState.Error(TIMEOUT_ERROR)
-                    )
+                    it.copy(loginState = AuthState.Error(e.message ?: "Unknown error"))
                 }
             }
         }
     }
+
 
     fun logout() {
         viewModelScope.launch {

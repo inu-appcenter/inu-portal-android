@@ -38,25 +38,29 @@ fun MyApp(authViewModel: AuthViewModel, modifier: Modifier = Modifier) {
         composable(AllDestination.Main.route) {
             WebViewScreen(
                 navController = navController,
-                path = AllDestination.Main.webPath!!
+                path = AllDestination.Main.webPath!!,
+                authViewModel = authViewModel
             )
         }
         composable(AllDestination.Save.route) {
             WebViewScreen(
                 navController = navController,
-                path = AllDestination.Save.webPath!!
+                path = AllDestination.Save.webPath!!,
+                authViewModel = authViewModel
             )
         }
         composable(AllDestination.Write.route) {
             WebViewScreen(
                 navController = navController,
-                path = AllDestination.Write.webPath!!
+                path = AllDestination.Write.webPath!!,
+                authViewModel = authViewModel
             )
         }
         composable(AllDestination.MyPage.route) {
             WebViewScreen(
                 navController = navController,
-                path = AllDestination.MyPage.webPath!!
+                path = AllDestination.MyPage.webPath!!,
+                authViewModel = authViewModel
             )
         }
     }

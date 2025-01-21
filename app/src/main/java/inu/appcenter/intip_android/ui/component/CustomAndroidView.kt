@@ -15,10 +15,17 @@ import androidx.compose.ui.viewinterop.AndroidView
 @Composable
 fun CustomAndroidView(
     modifier: Modifier = Modifier,
-    path: String
-){
+    path: String,
+    token: String? = null  // 추가: 토큰
+) {
     val WEB_BASE_URL = "https://intip.inuappcenter.kr/app"
-
+    val url = "$WEB_BASE_URL$path"
+    // 토큰이 있는 경우, extra headers를 구성합니다.
+    val headers = if (!token.isNullOrEmpty()) {
+        mapOf("Auth" to "$token")
+    } else {
+        emptyMap()
+    }
 
     AndroidView(
         modifier = modifier
@@ -42,12 +49,9 @@ fun CustomAndroidView(
                 settings.setSupportZoom(false)
                 settings.displayZoomControls = false
 
-
-
-
                 webChromeClient = object : WebChromeClient() {
                     override fun onConsoleMessage(consoleMessage: ConsoleMessage): Boolean {
-                        // 원하는 대로 처리(필터링, 로깅 등)
+                        // 원하는 대로 처리 (필터링, 로깅 등)
                         Log.d(
                             "WebViewConsole",
                             "[${consoleMessage.messageLevel()}] " +
@@ -57,11 +61,13 @@ fun CustomAndroidView(
                         return super.onConsoleMessage(consoleMessage)
                     }
                 }
-                loadUrl("${WEB_BASE_URL}${path}")
+                // extra headers를 포함하여 URL 로드
+                loadUrl(url, headers)
             }
         },
         update = { webView ->
-            webView.loadUrl("${WEB_BASE_URL}${path}")
+            // 업데이트 시에도 extra headers와 함께 로드
+            webView.loadUrl(url, headers)
         }
     )
 }

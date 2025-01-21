@@ -1,6 +1,7 @@
 package inu.appcenter.intip_android.local
 
 import android.content.Context
+import android.util.Log
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
@@ -23,6 +24,7 @@ class DataStoreManager(private val context: Context) {
         context.dataStore.edit { preferences ->
             preferences[TOKEN_KEY] = token
         }
+        Log.d("DataStoreManager", "Token saved: $token")
     }
 
     suspend fun clearToken() {
