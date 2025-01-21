@@ -6,4 +6,5 @@ import retrofit2.Response
 
 interface MemberRepository {
     suspend fun login(loginDto: LoginDto): Response<LoginResponse>
+    suspend fun refreshToken(refreshToken: String): Response<LoginResponse>
 }

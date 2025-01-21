@@ -9,6 +9,7 @@ import inu.appcenter.intip_android.repository.member.MemberRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -41,20 +42,15 @@ class AuthViewModel(
     val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
 
     // tokenFlow를 외부에 공개합니다.
-    val tokenFlow = dataStoreManager.token
+    val tokenFlow = dataStoreManager.accessToken
 
     init {
         observeToken()
-        viewModelScope.launch {
-            tokenFlow.collect { token ->
-                Log.d("AuthViewModel", "Current token in DataStore: $token")
-            }
-        }
     }
 
     private fun observeToken() {
         viewModelScope.launch {
-            dataStoreManager.token
+            dataStoreManager.accessToken
                 .map { !it.isNullOrEmpty() }
                 .collect { hasToken ->
                     _uiState.update { it.copy(hasToken = hasToken) }
@@ -73,7 +69,7 @@ class AuthViewModel(
     fun saveToken(token: String) {
         viewModelScope.launch {
             try {
-                dataStoreManager.saveToken(token)
+                dataStoreManager.saveAccessToken(token)
                 _uiState.update { it.copy(saveTokenState = true) }
             } catch (e: Exception) {
                 _uiState.update { it.copy(saveTokenState = false) }
@@ -92,8 +88,11 @@ class AuthViewModel(
                     val tokenDto = loginResponse.data
                         ?: throw Exception(loginResponse.msg ?: "로그인 실패")
 
-                    Log.d("AuthViewModel", "Received token: ${tokenDto.accessToken}")
-                    dataStoreManager.saveToken(tokenDto.accessToken)
+                    Log.d("AuthViewModel", "Received access token: ${tokenDto.accessToken}")
+                    Log.d("AuthViewModel", "Received refresh token: ${tokenDto.refreshToken}")
+
+                    dataStoreManager.saveAccessToken(tokenDto.accessToken)
+                    dataStoreManager.saveRefreshToken(tokenDto.refreshToken)
                     _uiState.update { it.copy(loginState = AuthState.Success) }
                 } else {
                     throw Exception(response.errorBody()?.string() ?: "알 수 없는 에러")
@@ -107,12 +106,39 @@ class AuthViewModel(
         }
     }
 
+    fun refreshToken() {
+        viewModelScope.launch {
+            try {
+                // DataStore에서 현재 저장된 토큰 중 refresh 토큰을 가져온다고 가정합니다.
+                // (만약 refresh 토큰과 access 토큰을 별도로 저장하고 있다면 해당 값을 사용하세요.)
+                val currentRefreshToken = dataStoreManager.refreshToken.first()
+                if (currentRefreshToken.isNullOrEmpty()) {
+                    throw Exception("현재 저장된 refresh 토큰이 없습니다.")
+                }
+                val response = memberRepository.refreshToken(currentRefreshToken)
+                if (response.isSuccessful) {
+                    val loginResponse = response.body() ?: throw Exception("토큰 갱신 응답이 비어있습니다.")
+                    // 성공 시 loginResponse.data에 TokenDto 객체가 있어야 함 (accessToken 등 포함)
+                    val tokenDto = loginResponse.data ?: throw Exception(loginResponse.msg ?: "토큰 갱신 실패")
+                    Log.d("AuthViewModel", "Refresh 성공, 새 accessToken: ${tokenDto.accessToken}")
+                    // 예를 들어 access token을 저장하도록 합니다.
+                    dataStoreManager.saveAccessToken(tokenDto.accessToken)
+                    // 필요한 경우 UI 상태 갱신 추가
+                } else {
+                    throw Exception(response.errorBody()?.string() ?: "토큰 갱신 에러")
+                }
+            } catch (e: Exception) {
+                Log.e("refreshToken", e.message ?: "토큰 갱신 에러")
+                // 오류 발생 시 사용자에게 재로그인 안내 등 추가 처리를 진행합니다.
+            }
+        }
+    }
 
     fun logout() {
         viewModelScope.launch {
             _uiState.update { it.copy(logoutState = AuthState.Loading) }
             try {
-                dataStoreManager.clearToken()
+                dataStoreManager.clearTokens()
 
                 _uiState.update {
                     it.copy(

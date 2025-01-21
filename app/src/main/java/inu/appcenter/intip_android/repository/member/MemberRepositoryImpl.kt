@@ -10,4 +10,8 @@ class MemberRepositoryImpl(private val apiService: APIService) : MemberRepositor
     override suspend fun login(loginDto: LoginDto): Response<LoginResponse> {
         return apiService.login(loginDto = loginDto)
     }
+
+    override suspend fun refreshToken(refreshToken: String): Response<LoginResponse> {
+        return apiService.refreshToken("Bearer $refreshToken")
+    }
 }

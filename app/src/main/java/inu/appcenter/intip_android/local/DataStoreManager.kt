@@ -12,24 +12,38 @@ class DataStoreManager(private val context: Context) {
 
     companion object {
         private val Context.dataStore by preferencesDataStore("user_prefs")
-        val TOKEN_KEY = stringPreferencesKey("token_key")
+        val ACCESS_TOKEN_KEY = stringPreferencesKey("access_token_key")
+        val REFRESH_TOKEN_KEY = stringPreferencesKey("refresh_token_key")
     }
 
-    val token: Flow<String?> = context.dataStore.data
+    val accessToken: Flow<String?> = context.dataStore.data
         .map { preferences ->
-            preferences[TOKEN_KEY]
+            preferences[ACCESS_TOKEN_KEY]
         }
 
-    suspend fun saveToken(token: String) {
-        context.dataStore.edit { preferences ->
-            preferences[TOKEN_KEY] = token
+    val refreshToken: Flow<String?> = context.dataStore.data
+        .map { preferences ->
+            preferences[REFRESH_TOKEN_KEY]
         }
-        Log.d("DataStoreManager", "Token saved: $token")
+
+    suspend fun saveAccessToken(token: String) {
+        context.dataStore.edit { preferences ->
+            preferences[ACCESS_TOKEN_KEY] = token
+        }
+        Log.d("DataStoreManager", "Access token saved: $token")
     }
 
-    suspend fun clearToken() {
+    suspend fun saveRefreshToken(token: String) {
         context.dataStore.edit { preferences ->
-            preferences.remove(TOKEN_KEY)
+            preferences[REFRESH_TOKEN_KEY] = token
+        }
+        Log.d("DataStoreManager", "Refresh token saved: $token")
+    }
+
+    suspend fun clearTokens() {
+        context.dataStore.edit { preferences ->
+            preferences.remove(ACCESS_TOKEN_KEY)
+            preferences.remove(REFRESH_TOKEN_KEY)
         }
     }
 }
