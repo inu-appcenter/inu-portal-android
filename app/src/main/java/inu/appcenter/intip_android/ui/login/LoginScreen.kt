@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,6 +30,7 @@ import androidx.compose.ui.unit.sp
 import coil.ImageLoader
 import coil.compose.AsyncImage
 import coil.decode.SvgDecoder
+import coil.request.CachePolicy
 import inu.appcenter.intip_android.R
 import inu.appcenter.intip_android.model.member.LoginDto
 import inu.appcenter.intip_android.ui.login.util.AgreementText
@@ -44,9 +46,13 @@ fun LoginScreen(
     val authUiState by authViewModel.uiState.collectAsState()
     val context = LocalContext.current
     var passwordVisible by remember { mutableStateOf(false) }
+
     // SVG 디코딩을 위한 ImageLoader 구성
     val imageLoader = ImageLoader.Builder(context)
         .components { add(SvgDecoder.Factory()) }
+        .diskCachePolicy(CachePolicy.ENABLED)  // 디스크 캐시 활성화
+        .memoryCachePolicy(CachePolicy.ENABLED) // 메모리 캐시 활성화
+        .crossfade(true)
         .build()
 
     // 로그인 성공/실패 감지
@@ -74,6 +80,7 @@ fun LoginScreen(
             .padding(32.dp),
         verticalArrangement = Arrangement.Center
     ) {
+        //가로 304 세로 141.6
         AsyncImage(
             model = "https://intip.inuappcenter.kr/assets/logo-with-text-BXx_GfoJ.svg",
             contentDescription = "INTIP Logo",
@@ -81,6 +88,7 @@ fun LoginScreen(
             modifier = Modifier
                 .align(Alignment.CenterHorizontally)
                 .padding(start = 6.dp)
+                .size(width = 304.dp, height = 141.6.dp)
         )
         Spacer(Modifier.height(90.dp))
 

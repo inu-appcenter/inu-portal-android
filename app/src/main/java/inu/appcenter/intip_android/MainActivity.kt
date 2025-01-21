@@ -34,30 +34,6 @@ class MainActivity : ComponentActivity() {
 
             INTIPTheme {
                 MyApp(authViewModel = authViewModel)
-//                NavHost(
-//                    navController = navController,
-//                    startDestination = Page.Main.name,
-//                    enterTransition = { EnterTransition.None },
-//                    exitTransition = { ExitTransition.None }
-//                ) {
-//                    navigation(
-//                        route = Page.Main.name,
-//                        startDestination = Page.Home.name
-//                    ) {
-//                        composable(route = Page.Home.name) {
-//                            WebPage(navController = navController, page = Page.Home)
-//                        }
-//                        composable(route = Page.Save.name) {
-//                            WebPage(navController = navController, page = Page.Save)
-//                        }
-//                        composable(route = Page.Write.name) {
-//                            WebPage(navController = navController, page = Page.Write)
-//                        }
-//                        composable(route = Page.MyPage.name) {
-//                            WebPage(navController = navController, page = Page.MyPage)
-//                        }
-//                    }
-//                }
             }
         }
     }
