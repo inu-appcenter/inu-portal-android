@@ -9,6 +9,7 @@ import inu.appcenter.intip_android.repository.member.MemberRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
@@ -47,15 +48,25 @@ class AuthViewModel(
 
     init {
         observeToken()
+
+        viewModelScope.launch {
+            dataStoreManager.accessToken.collect { token ->
+                Log.d("AuthViewModel", "Flow 업데이트, accessToken: $token")
+            }
+        }
     }
 
     private fun observeToken() {
         viewModelScope.launch {
-            dataStoreManager.accessToken
-                .map { !it.isNullOrEmpty() }
-                .collect { hasToken ->
-                    _uiState.update { it.copy(hasToken = hasToken) }
-                }
+            combine(
+                dataStoreManager.accessToken,
+                dataStoreManager.accessTokenExpiredTime
+            ) { token, expiry ->
+                token != null && expiry != null && !isAccessTokenExpired(expiry)
+            }.collect { valid ->
+                _uiState.update { it.copy(hasToken = valid) }
+                Log.d("AuthViewModel", "유효 토큰 여부: $valid")
+            }
         }
     }
 
@@ -90,6 +101,7 @@ class AuthViewModel(
      * 3. 토큰이 없거나 갱신에 실패하면 기존 로그인 API 호출로 진행합니다.
      */
     fun login(loginDto: LoginDto) {
+        Log.e("AuthViewModel", "test")
         viewModelScope.launch {
             _uiState.update { it.copy(loginState = AuthState.Loading) }
             try {
@@ -135,6 +147,13 @@ class AuthViewModel(
                     // 받아온 토큰과 만료시간을 DataStore에 저장합니다.
                     dataStoreManager.saveAccessToken(tokenDto.accessToken, tokenDto.accessTokenExpiredTime)
                     dataStoreManager.saveRefreshToken(tokenDto.refreshToken, tokenDto.refreshTokenExpiredTime)
+
+                    viewModelScope.launch {
+                        val latestToken = dataStoreManager.accessToken.first()
+                        val latestExpiry = dataStoreManager.accessTokenExpiredTime.first()
+                        Log.d("AuthViewModel", "최신 저장 토큰: $latestToken, 만료시간: $latestExpiry")
+                    }
+
                     _uiState.update { it.copy(loginState = AuthState.Success) }
                 } else {
                     throw Exception(response.errorBody()?.string() ?: "알 수 없는 에러")

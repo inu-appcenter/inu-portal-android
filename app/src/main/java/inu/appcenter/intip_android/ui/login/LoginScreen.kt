@@ -2,6 +2,7 @@ package inu.appcenter.intip_android.ui.login
 
 import android.content.Intent
 import android.net.Uri
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -124,6 +125,7 @@ fun LoginScreen(
 
         LoginButton(
             onClick = {
+                Log.d("LoginButton", "login() 호출 직전")
                 authViewModel.login(
                     LoginDto(
                         studentId = authUiState.loginId,

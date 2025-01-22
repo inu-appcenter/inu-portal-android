@@ -2,12 +2,14 @@
 
 package inu.appcenter.intip_android.ui.screen
 
+import android.util.Log
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -29,6 +31,10 @@ fun WebViewScreen(
     // 상위에서 tokenFlow를 구독하여 토큰을 가져옵니다.
     val token by authViewModel.tokenFlow.collectAsState(initial = null)
 
+    LaunchedEffect(token) {
+        Log.d("WebViewScreen", "최신 토큰 값: $token")
+    }
+
     Scaffold(
         bottomBar = {
             AppBottomBar(navController)
@@ -46,5 +52,6 @@ fun WebViewScreen(
             path = path,
             token = token   // 토큰 전달
         )
+        Log.d("WebViewScreen", "Scaffold - Token: $token")
     }
 }
