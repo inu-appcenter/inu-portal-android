@@ -32,6 +32,7 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
+        isCoreLibraryDesugaringEnabled = true
     }
     kotlinOptions {
         jvmTarget = "1.8"
@@ -95,4 +96,7 @@ dependencies {
     implementation(libs.coil.compose.v240)
     // Coil SVG support
     implementation(libs.coil.svg.v240)
+
+    // For AGP 7.4+ Java 8+ API 디슈가링 지원
+    coreLibraryDesugaring(libs.desugar.jdk.libs)
 }
