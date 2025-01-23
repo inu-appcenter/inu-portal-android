@@ -15,6 +15,6 @@ interface APIService {
 
     @POST("/api/members/refresh")
     suspend fun refreshToken(
-        @Header("Auth") refreshToken: String
+        @Header("refresh") refreshToken: String
     ): Response<LoginResponse>
 }

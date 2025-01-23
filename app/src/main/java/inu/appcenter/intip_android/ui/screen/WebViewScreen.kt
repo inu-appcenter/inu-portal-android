@@ -52,6 +52,5 @@ fun WebViewScreen(
             path = path,
             token = token   // 토큰 전달
         )
-        Log.d("WebViewScreen", "Scaffold - Token: $token")
     }
 }

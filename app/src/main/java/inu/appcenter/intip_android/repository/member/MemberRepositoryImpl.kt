@@ -12,6 +12,6 @@ class MemberRepositoryImpl(private val apiService: APIService) : MemberRepositor
     }
 
     override suspend fun refreshToken(refreshToken: String): Response<LoginResponse> {
-        return apiService.refreshToken("Bearer $refreshToken")
+        return apiService.refreshToken(refreshToken)
     }
 }

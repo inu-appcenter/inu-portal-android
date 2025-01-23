@@ -93,6 +93,63 @@ class AuthViewModel(
     }
 
     /**
+     * refreshToken 함수
+     * DataStore에 저장된 refresh 토큰과 만료시간을 기반으로 새로운 access token 및 refresh token을 받아옵니다.
+     * @return Boolean - 토큰 갱신 성공 여부
+     */
+    suspend fun refreshToken(): Boolean {
+        return try {
+            val currentRefreshToken = dataStoreManager.refreshToken.first()
+            val currentRefreshExpiry = dataStoreManager.refreshTokenExpiredTime.first()
+            Log.d("AuthViewModel", "현재 refresh token: $currentRefreshToken, 만료시간: $currentRefreshExpiry")
+
+            if (currentRefreshToken.isNullOrEmpty() || currentRefreshExpiry.isNullOrEmpty()) {
+                throw Exception("저장된 refresh 토큰 정보가 없습니다.")
+            }
+
+            // refresh token 만료 여부 체크
+            if (isAccessTokenExpired(currentRefreshExpiry)) {
+                throw Exception("refresh 토큰이 만료되었습니다.")
+            }
+
+            // 토큰 갱신 API 호출
+            val response = memberRepository.refreshToken(currentRefreshToken)
+            Log.d("AuthViewModel", "refreshToken API 호출 성공, response: $response")
+
+            if (response.isSuccessful) {
+                val loginResponse = response.body()
+                    ?: throw Exception("토큰 갱신 응답이 비어있습니다.")
+                val tokenDto = loginResponse.data
+                    ?: throw Exception(loginResponse.msg ?: "토큰 갱신 실패")
+
+                Log.d("AuthViewModel", "Refresh 성공, 새 accessToken: ${tokenDto.accessToken}")
+                Log.d("AuthViewModel", "Refresh 성공, 새 refreshToken: ${tokenDto.refreshToken}")
+
+                // 새 토큰을 DataStore에 저장
+                dataStoreManager.saveAccessToken(tokenDto.accessToken, tokenDto.accessTokenExpiredTime)
+                dataStoreManager.saveRefreshToken(tokenDto.refreshToken, tokenDto.refreshTokenExpiredTime)
+
+                // 저장 후 로그로 확인
+                val latestToken = dataStoreManager.accessToken.first()
+                val latestExpiry = dataStoreManager.accessTokenExpiredTime.first()
+                Log.d("AuthViewModel", "새로 저장된 accessToken: $latestToken, 만료시간: $latestExpiry")
+
+                val latestRefreshToken = dataStoreManager.refreshToken.first()
+                val latestRefreshExpiry = dataStoreManager.refreshTokenExpiredTime.first()
+                Log.d("AuthViewModel", "새로 저장된 refreshToken: $latestRefreshToken, 만료시간: $latestRefreshExpiry")
+
+                true
+            } else {
+                Log.e("AuthViewModel", "refreshToken API 실패, 코드: ${response.code()}, 메시지: ${response.message()}")
+                throw Exception(response.errorBody()?.string() ?: "토큰 갱신 에러")
+            }
+        } catch (e: Exception) {
+            Log.e("refreshToken", e.message ?: "토큰 갱신 에러")
+            false
+        }
+    }
+
+    /**
      * 로그인 함수
      * 1. 우선 DataStore에 저장된 accessToken과 accessTokenExpiredTime을 확인합니다.
      * 2. 토큰이 존재하면 만료여부를 판단합니다.
@@ -101,7 +158,7 @@ class AuthViewModel(
      * 3. 토큰이 없거나 갱신에 실패하면 기존 로그인 API 호출로 진행합니다.
      */
     fun login(loginDto: LoginDto) {
-        Log.e("AuthViewModel", "test")
+        Log.e("AuthViewModel", "login() 호출")
         viewModelScope.launch {
             _uiState.update { it.copy(loginState = AuthState.Loading) }
             try {
@@ -118,14 +175,19 @@ class AuthViewModel(
                     } else {
                         // 토큰이 만료된 경우, refreshToken() 호출을 통해 토큰 갱신 시도
                         Log.d("AuthViewModel", "만료된 토큰 발견 (만료시간: $currentTokenExpiry). 토큰 갱신 시도...")
-                        refreshToken()
-                        // 잠시 대기 후 새 토큰 정보 확인
-                        val newToken = dataStoreManager.accessToken.first()
-                        val newTokenExpiry = dataStoreManager.accessTokenExpiredTime.first()
-                        if (!newToken.isNullOrEmpty() && newTokenExpiry != null && !isAccessTokenExpired(newTokenExpiry)) {
-                            Log.d("AuthViewModel", "토큰 갱신 성공: $newToken (만료시간: $newTokenExpiry)")
-                            _uiState.update { it.copy(loginState = AuthState.Success) }
-                            return@launch
+                        val refreshSuccess = refreshToken()
+                        if (refreshSuccess) {
+                            // 새 토큰 정보 확인
+                            val newToken = dataStoreManager.accessToken.first()
+                            val newTokenExpiry = dataStoreManager.accessTokenExpiredTime.first()
+                            Log.d("AuthViewModel", "토큰 갱신 후 토큰: $newToken, 만료시간: $newTokenExpiry")
+                            if (!newToken.isNullOrEmpty() && newTokenExpiry != null && !isAccessTokenExpired(newTokenExpiry)) {
+                                Log.d("AuthViewModel", "토큰 갱신 성공: $newToken (만료시간: $newTokenExpiry)")
+                                _uiState.update { it.copy(loginState = AuthState.Success) }
+                                return@launch
+                            } else {
+                                throw Exception("토큰 갱신에 실패했습니다.")
+                            }
                         } else {
                             throw Exception("토큰 갱신에 실패했습니다.")
                         }
@@ -133,6 +195,7 @@ class AuthViewModel(
                 }
 
                 // 저장된 토큰이 없는 경우 기존 로그인 API 호출
+                Log.d("AuthViewModel", "저장된 토큰이 없음. 로그인 API 호출")
                 val response = memberRepository.login(loginDto)
                 if (response.isSuccessful) {
                     val loginResponse = response.body()
@@ -148,14 +211,18 @@ class AuthViewModel(
                     dataStoreManager.saveAccessToken(tokenDto.accessToken, tokenDto.accessTokenExpiredTime)
                     dataStoreManager.saveRefreshToken(tokenDto.refreshToken, tokenDto.refreshTokenExpiredTime)
 
-                    viewModelScope.launch {
-                        val latestToken = dataStoreManager.accessToken.first()
-                        val latestExpiry = dataStoreManager.accessTokenExpiredTime.first()
-                        Log.d("AuthViewModel", "최신 저장 토큰: $latestToken, 만료시간: $latestExpiry")
-                    }
+                    // 저장 후 로그로 확인
+                    val latestToken = dataStoreManager.accessToken.first()
+                    val latestExpiry = dataStoreManager.accessTokenExpiredTime.first()
+                    Log.d("AuthViewModel", "최신 저장 토큰: $latestToken, 만료시간: $latestExpiry")
+
+                    val latestRefreshToken = dataStoreManager.refreshToken.first()
+                    val latestRefreshExpiry = dataStoreManager.refreshTokenExpiredTime.first()
+                    Log.d("AuthViewModel", "최신 저장 refreshToken: $latestRefreshToken, 만료시간: $latestRefreshExpiry")
 
                     _uiState.update { it.copy(loginState = AuthState.Success) }
                 } else {
+                    Log.e("AuthViewModel", "로그인 API 실패, 코드: ${response.code()}, 메시지: ${response.message()}")
                     throw Exception(response.errorBody()?.string() ?: "알 수 없는 에러")
                 }
             } catch (e: Exception) {
@@ -163,44 +230,6 @@ class AuthViewModel(
                 _uiState.update {
                     it.copy(loginState = AuthState.Error(e.message ?: UNKNOWN_ERROR))
                 }
-            }
-        }
-    }
-
-    /**
-     * refreshToken 함수
-     * DataStore에 저장된 refresh 토큰과 만료시간을 기반으로 새로운 access token 및 refresh token을 받아옵니다.
-     */
-    fun refreshToken() {
-        viewModelScope.launch {
-            try {
-                val currentRefreshToken = dataStoreManager.refreshToken.first()
-                val currentRefreshExpiry = dataStoreManager.refreshTokenExpiredTime.first()
-                if (currentRefreshToken.isNullOrEmpty() || currentRefreshExpiry.isNullOrEmpty()) {
-                    throw Exception("저장된 refresh 토큰 정보가 없습니다.")
-                }
-
-                // refresh token 만료 여부도 체크할 수 있습니다.
-                if (isAccessTokenExpired(currentRefreshExpiry)) {
-                    throw Exception("refresh 토큰이 만료되었습니다.")
-                }
-
-                val response = memberRepository.refreshToken(currentRefreshToken)
-                if (response.isSuccessful) {
-                    val loginResponse = response.body()
-                        ?: throw Exception("토큰 갱신 응답이 비어있습니다.")
-                    val tokenDto = loginResponse.data
-                        ?: throw Exception(loginResponse.msg ?: "토큰 갱신 실패")
-                    Log.d("AuthViewModel", "Refresh 성공, 새 accessToken: ${tokenDto.accessToken}")
-                    // 받아온 새로운 토큰들을 DataStore에 저장합니다.
-                    dataStoreManager.saveAccessToken(tokenDto.accessToken, tokenDto.accessTokenExpiredTime)
-                    dataStoreManager.saveRefreshToken(tokenDto.refreshToken, tokenDto.refreshTokenExpiredTime)
-                } else {
-                    throw Exception(response.errorBody()?.string() ?: "토큰 갱신 에러")
-                }
-            } catch (e: Exception) {
-                Log.e("refreshToken", e.message ?: "토큰 갱신 에러")
-                // 추가 오류 처리가 필요하면 여기에 구현합니다.
             }
         }
     }
