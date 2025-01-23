@@ -32,7 +32,8 @@ data class AuthUiState(
     val loginId: String = "",
     val loginPw: String = "",
     val saveTokenState: Boolean? = null,
-    val hasToken: Boolean? = null
+    val hasToken: Boolean? = null,
+    val token: String? = null
 )
 
 class AuthViewModel(
@@ -62,10 +63,11 @@ class AuthViewModel(
                 dataStoreManager.accessToken,
                 dataStoreManager.accessTokenExpiredTime
             ) { token, expiry ->
-                token != null && expiry != null && !isAccessTokenExpired(expiry)
-            }.collect { valid ->
-                _uiState.update { it.copy(hasToken = valid) }
-                Log.d("AuthViewModel", "유효 토큰 여부: $valid")
+                val valid = token != null && expiry != null && !isAccessTokenExpired(expiry)
+                Pair(valid, token)
+            }.collect { (valid, token) ->
+                _uiState.update { it.copy(hasToken = valid, token = token) }
+                Log.d("AuthViewModel", "유효 토큰 여부: $valid, Token: $token")
             }
         }
     }
@@ -77,6 +79,8 @@ class AuthViewModel(
     fun setLoginPw(loginPw: String) {
         _uiState.update { it.copy(loginPw = loginPw) }
     }
+
+
 
     /**
      * 토큰 만료여부 확인 함수
