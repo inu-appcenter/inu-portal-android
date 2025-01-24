@@ -105,6 +105,10 @@ fun CustomAndroidView(
                                 navigateToDestination(navController, "write", AllDestination.Write.route)
                                 return true
                             }
+//                            Routes.HOME -> {
+//                                navigateToDestination(navController, "home", AllDestination.Main.route)
+//                                return true
+//                            }
                             // 추가적인 경로가 필요하면 여기에 추가
                             else -> {
                                 // 다른 경로는 WebView가 처리하도록 함
@@ -172,24 +176,31 @@ private fun navigateToDestination(navController: NavController, tab: String, rou
         "mypage" -> {
             if (navController.currentDestination?.route != AllDestination.MyPage.route) {
                 navController.navigate(AllDestination.MyPage.route) {
-                    popUpTo(AllDestination.Main.route) { inclusive = false }
+                    popUpTo(AllDestination.Home.route) { inclusive = false }
                 }
             }
         }
         "save" -> {
             if (navController.currentDestination?.route != AllDestination.Save.route) {
                 navController.navigate(AllDestination.Save.route) {
-                    popUpTo(AllDestination.Main.route) { inclusive = false }
+                    popUpTo(AllDestination.Home.route) { inclusive = false }
                 }
             }
         }
         "write" -> {
             if (navController.currentDestination?.route != AllDestination.Write.route) {
                 navController.navigate(AllDestination.Write.route) {
-                    popUpTo(AllDestination.Main.route) { inclusive = false }
+                    popUpTo(AllDestination.Home.route) { inclusive = false }
                 }
             }
         }
+//        "home" -> {
+//            if (navController.currentDestination?.route != AllDestination.Main.route) {
+//                navController.navigate(AllDestination.Main.route) {
+//                    popUpTo(AllDestination.Main.route) { inclusive = false }
+//                }
+//            }
+//        }
         // 필요한 다른 탭 추가
         else -> {
             Log.w("AndroidBridge", "Unknown tab: $tab")

@@ -31,7 +31,6 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import inu.appcenter.intip_android.R
-import inu.appcenter.intip_android.ui.utils.shadowCustom
 import inu.appcenter.intip_android.ui.navigate.AllDestination
 import inu.appcenter.intip_android.ui.theme.Blue_9CAFE2
 import inu.appcenter.intip_android.ui.theme.Gray_D6D1D5
@@ -43,7 +42,7 @@ fun AppBottomBar(
     navController: NavHostController
 ) {
     val screens = listOf<Pair<AllDestination, @DrawableRes Int>>(
-        AllDestination.Main to R.drawable.icon_home_active,
+        AllDestination.Home to R.drawable.icon_home_active,
         AllDestination.Save to R.drawable.icon_save,
         AllDestination.Write to R.drawable.icon_write,
         AllDestination.MyPage to R.drawable.icon_profile,
@@ -104,8 +103,8 @@ fun AppBottomBar(
                     Log.d("AppBottomBar", "Button clicked: ${screen.route}")
                     if (navController.currentDestination?.route != screen.route) {
                         Log.d("AppBottomBar", "Navigating to: ${screen.route}")
-                        if (screen.route == AllDestination.Main.route) {
-                            navController.popBackStack(AllDestination.Main.route, inclusive = true)
+                        if (screen.route == AllDestination.Home.route) {
+                            navController.popBackStack(AllDestination.Home.route, inclusive = true)
                         }
                         navController.navigate(screen.route)
                     }

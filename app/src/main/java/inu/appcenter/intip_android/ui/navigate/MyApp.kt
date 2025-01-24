@@ -36,13 +36,13 @@ fun MyApp(authViewModel: AuthViewModel, modifier: Modifier = Modifier) {
 
     NavHost(
         navController = navController,
-        startDestination = if(uiState.hasToken == true) AllDestination.Main.route else AllDestination.Login.route,
+        startDestination = if(uiState.hasToken == true) AllDestination.Home.route else AllDestination.Login.route,
         modifier = modifier
     ) {
         composable(AllDestination.Login.route) {
             LoginScreen(
                 onLoginSuccess = {
-                    navController.navigate(AllDestination.Main.route) {
+                    navController.navigate(AllDestination.Home.route) {
                         popUpTo(AllDestination.Login.route) { inclusive = true }
                     }
                 },
@@ -52,10 +52,10 @@ fun MyApp(authViewModel: AuthViewModel, modifier: Modifier = Modifier) {
             )
         }
         //todo: 나중에 WebViewScreen들은 반복문으로 관리하면 좋을듯
-        composable(AllDestination.Main.route) {
+        composable(AllDestination.Home.route) {
             WebViewScreen(
                 navController = navController,
-                path = AllDestination.Main.webPath!!,
+                path = AllDestination.Home.webPath!!,
                 authViewModel = authViewModel
             )
         }
