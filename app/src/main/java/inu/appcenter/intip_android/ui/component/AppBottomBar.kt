@@ -105,13 +105,9 @@ fun AppBottomBar(
                     if (navController.currentDestination?.route != screen.route) {
                         Log.d("AppBottomBar", "Navigating to: ${screen.route}")
                         if (screen.route == AllDestination.Main.route) {
-                            // 'main'을 스택에서 제거
                             navController.popBackStack(AllDestination.Main.route, inclusive = true)
                         }
-                        navController.navigate(screen.route) {
-                            launchSingleTop = true
-                            restoreState = true
-                        }
+                        navController.navigate(screen.route)
                     }
                 },
                 colors = NavigationBarItemDefaults.colors(

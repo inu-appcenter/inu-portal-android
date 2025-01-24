@@ -71,17 +71,17 @@ fun CustomAndroidView(
             // JavaScript Interface 추가
             addJavascriptInterface(AndroidBridge(navController), "AndroidBridge")
 
-            webChromeClient = object : WebChromeClient() {
-                override fun onConsoleMessage(consoleMessage: ConsoleMessage): Boolean {
-                    Log.d(
-                        "WebViewConsole",
-                        "[${consoleMessage.messageLevel()}] " +
-                                "${consoleMessage.message()} " +
-                                "(line: ${consoleMessage.lineNumber()}, source: ${consoleMessage.sourceId()})"
-                    )
-                    return super.onConsoleMessage(consoleMessage)
-                }
-            }
+//            webChromeClient = object : WebChromeClient() {
+//                override fun onConsoleMessage(consoleMessage: ConsoleMessage): Boolean {
+//                    Log.d(
+//                        "WebViewConsole",
+//                        "[${consoleMessage.messageLevel()}] " +
+//                                "${consoleMessage.message()} " +
+//                                "(line: ${consoleMessage.lineNumber()}, source: ${consoleMessage.sourceId()})"
+//                    )
+//                    return super.onConsoleMessage(consoleMessage)
+//                }
+//            }
 
             webViewClient = object : WebViewClient() {
                 override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
@@ -100,6 +100,10 @@ fun CustomAndroidView(
                             }
                             Routes.SAVE -> {
                                 navigateToDestination(navController, "save", AllDestination.Save.route)
+                                return true
+                            }
+                            Routes.WRITE -> {
+                                navigateToDestination(navController, "write", AllDestination.Write.route)
                                 return true
                             }
                             // 추가적인 경로가 필요하면 여기에 추가
@@ -169,17 +173,20 @@ private fun navigateToDestination(navController: NavController, tab: String, rou
         "mypage" -> {
             if (navController.currentDestination?.route != AllDestination.MyPage.route) {
                 navController.navigate(AllDestination.MyPage.route) {
-                    popUpTo(AllDestination.Main.route) { // "main" 경로로 정확히 지정
-                        inclusive = false
-                    }
-                    launchSingleTop = true
-                    restoreState = true
+                    popUpTo(AllDestination.Main.route) { inclusive = false }
                 }
             }
         }
         "save" -> {
             if (navController.currentDestination?.route != AllDestination.Save.route) {
                 navController.navigate(AllDestination.Save.route) {
+                    popUpTo(AllDestination.Main.route) { inclusive = false }
+                }
+            }
+        }
+        "write" -> {
+            if (navController.currentDestination?.route != AllDestination.Write.route) {
+                navController.navigate(AllDestination.Write.route) {
                     popUpTo(AllDestination.Main.route) { inclusive = false }
                 }
             }
