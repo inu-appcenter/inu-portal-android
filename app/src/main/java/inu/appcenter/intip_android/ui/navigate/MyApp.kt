@@ -56,28 +56,32 @@ fun MyApp(authViewModel: AuthViewModel, modifier: Modifier = Modifier) {
             WebViewScreen(
                 navController = navController,
                 path = AllDestination.Home.webPath!!,
-                authViewModel = authViewModel
+                authViewModel = authViewModel,
+                isShowBottomBar = true
             )
         }
         composable(AllDestination.Save.route) {
             WebViewScreen(
                 navController = navController,
                 path = AllDestination.Save.webPath!!,
-                authViewModel = authViewModel
+                authViewModel = authViewModel,
+                isShowBottomBar = true
             )
         }
         composable(AllDestination.Write.route) {
             WebViewScreen(
                 navController = navController,
                 path = AllDestination.Write.webPath!!,
-                authViewModel = authViewModel
+                authViewModel = authViewModel,
+                isShowBottomBar = true
             )
         }
         composable(AllDestination.MyPage.route) {
             WebViewScreen(
                 navController = navController,
                 path = AllDestination.MyPage.webPath!!,
-                authViewModel = authViewModel
+                authViewModel = authViewModel,
+                isShowBottomBar = true
             )
         }
     }

@@ -29,7 +29,8 @@ fun WebViewScreen(
     modifier: Modifier = Modifier,
     navController: NavHostController,
     path: String,
-    authViewModel: AuthViewModel
+    authViewModel: AuthViewModel,
+    isShowBottomBar: Boolean
 ) {
     val uiState by authViewModel.uiState.collectAsState()
 
@@ -39,15 +40,21 @@ fun WebViewScreen(
 
     Scaffold(
         bottomBar = {
-            AppBottomBar(navController)
+            if (isShowBottomBar) {
+                AppBottomBar(navController)
+            }
         }
     ) { paddingValue ->
-        val newPaddingValue = PaddingValues(
-            start = paddingValue.calculateStartPadding(LayoutDirection.Ltr),
-            end = paddingValue.calculateEndPadding(LayoutDirection.Rtl),
-            top = 0.dp,
-            bottom = paddingValue.calculateBottomPadding() - 20.dp // Scafflod의 기본 BottomPadding에서 BottomNavigation의 둥근 정도를 뺀 값
-        )
+        val newPaddingValue = if (isShowBottomBar) {
+            PaddingValues(
+                start = paddingValue.calculateStartPadding(LayoutDirection.Ltr),
+                end = paddingValue.calculateEndPadding(LayoutDirection.Rtl),
+                top = 0.dp,
+                bottom = paddingValue.calculateBottomPadding() - 20.dp // Scafflod의 기본 BottomPadding에서 BottomNavigation의 둥근 정도를 뺀 값
+            )
+        } else {
+            paddingValue
+        }
         when {
             uiState.hasToken == true && !uiState.token.isNullOrEmpty() -> {
                 CustomAndroidView(
@@ -57,6 +64,7 @@ fun WebViewScreen(
                     navController = navController
                 )
             }
+
             uiState.hasToken == true && uiState.token.isNullOrEmpty() -> {
                 // 토큰 로딩 중 또는 에러 상태 처리
                 Box(
@@ -68,6 +76,7 @@ fun WebViewScreen(
                     CircularProgressIndicator()
                 }
             }
+
             else -> {
                 // 로그인 화면 또는 에러 메시지 표시
                 Box(
