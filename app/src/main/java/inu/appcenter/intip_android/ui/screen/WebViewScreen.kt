@@ -54,7 +54,8 @@ fun WebViewScreen(
                 CustomAndroidView(
                     modifier = Modifier.padding(newPaddingValue),
                     path = path,
-                    token = uiState.token   // 토큰 전달
+                    token = uiState.token,   // 토큰 전달
+                    navController = navController
                 )
             }
             uiState.hasToken == true && uiState.token.isNullOrEmpty() -> {
