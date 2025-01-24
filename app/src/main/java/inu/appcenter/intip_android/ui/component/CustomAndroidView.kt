@@ -65,23 +65,22 @@ fun CustomAndroidView(
                 loadWithOverviewMode = true
                 setSupportZoom(false)
                 displayZoomControls = false
-                mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_NEVER_ALLOW
             }
 
             // JavaScript Interface 추가
             addJavascriptInterface(AndroidBridge(navController), "AndroidBridge")
 
-//            webChromeClient = object : WebChromeClient() {
-//                override fun onConsoleMessage(consoleMessage: ConsoleMessage): Boolean {
-//                    Log.d(
-//                        "WebViewConsole",
-//                        "[${consoleMessage.messageLevel()}] " +
-//                                "${consoleMessage.message()} " +
-//                                "(line: ${consoleMessage.lineNumber()}, source: ${consoleMessage.sourceId()})"
-//                    )
-//                    return super.onConsoleMessage(consoleMessage)
-//                }
-//            }
+            webChromeClient = object : WebChromeClient() {
+                override fun onConsoleMessage(consoleMessage: ConsoleMessage): Boolean {
+                    Log.d(
+                        "WebViewConsole",
+                        "[${consoleMessage.messageLevel()}] " +
+                                "${consoleMessage.message()} " +
+                                "(line: ${consoleMessage.lineNumber()}, source: ${consoleMessage.sourceId()})"
+                    )
+                    return super.onConsoleMessage(consoleMessage)
+                }
+            }
 
             webViewClient = object : WebViewClient() {
                 override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
