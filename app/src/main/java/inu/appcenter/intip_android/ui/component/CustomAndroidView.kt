@@ -1,5 +1,6 @@
 package inu.appcenter.intip_android.ui.component
 
+import android.content.Intent
 import android.net.Uri
 import android.os.Handler
 import android.os.Looper
@@ -64,6 +65,7 @@ fun CustomAndroidView(
                 loadWithOverviewMode = true
                 setSupportZoom(false)
                 displayZoomControls = false
+                mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_NEVER_ALLOW
             }
 
             // JavaScript Interface 추가
@@ -84,13 +86,20 @@ fun CustomAndroidView(
             webViewClient = object : WebViewClient() {
                 override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
                     request?.url?.let { uri ->
+                        if (uri.host != "intip.inuappcenter.kr") {
+                            // 허용되지 않은 도메인 접근 시 네이티브 브라우저로 열기
+                            val intent = Intent(Intent.ACTION_VIEW, uri)
+                            context.startActivity(intent)
+                            return true
+                        }
+
                         when (uri.path) {
                             Routes.MYPAGE -> {
-                                navigateToDestination(navController, AllDestination.MyPage.route)
-                                return true // WebView에서 로드하지 않도록 함
+                                navigateToDestination(navController, "mypage", AllDestination.MyPage.route)
+                                return true
                             }
                             Routes.SAVE -> {
-                                navigateToDestination(navController, AllDestination.Save.route)
+                                navigateToDestination(navController, "save", AllDestination.Save.route)
                                 return true
                             }
                             // 추가적인 경로가 필요하면 여기에 추가
@@ -145,9 +154,9 @@ fun CustomAndroidView(
  */
 class AndroidBridge(private val navController: NavController) {
     @JavascriptInterface
-    fun navigateTo(route: String) {
+    fun navigateTo(tab: String, route: String) {
         Handler(Looper.getMainLooper()).post {
-            navigateToDestination(navController, route)
+            navigateToDestination(navController, tab, route)
         }
     }
 }
@@ -155,11 +164,32 @@ class AndroidBridge(private val navController: NavController) {
 /**
  * 네이티브 네비게이션을 처리하는 공통 함수
  */
-private fun navigateToDestination(navController: NavController, route: String) {
-    if (navController.currentDestination?.route != route) {
-        navController.navigate(route) {
-            // 필요한 네비게이션 옵션 설정
-            popUpTo(AllDestination.Main.route) { inclusive = false }
+private fun navigateToDestination(navController: NavController, tab: String, route: String) {
+    when (tab) {
+        "mypage" -> {
+            if (navController.currentDestination?.route != AllDestination.MyPage.route) {
+                navController.navigate(AllDestination.MyPage.route) {
+                    popUpTo(AllDestination.Main.route) { // "main" 경로로 정확히 지정
+                        inclusive = false
+                    }
+                    launchSingleTop = true
+                    restoreState = true
+                }
+            }
+        }
+        "save" -> {
+            if (navController.currentDestination?.route != AllDestination.Save.route) {
+                navController.navigate(AllDestination.Save.route) {
+                    popUpTo(AllDestination.Main.route) { inclusive = false }
+                }
+            }
+        }
+        // 필요한 다른 탭 추가
+        else -> {
+            Log.w("AndroidBridge", "Unknown tab: $tab")
         }
     }
+
+    // 추가로 route에 따라 페이지를 로드하는 로직을 추가할 수 있습니다.
+    // 예: 특정 탭 내에서 특정 페이지로 이동
 }

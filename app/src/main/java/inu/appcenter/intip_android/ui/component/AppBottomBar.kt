@@ -1,5 +1,6 @@
 package inu.appcenter.intip_android.ui.component
 
+import android.util.Log
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -100,13 +101,16 @@ fun AppBottomBar(
                 },
                 selected = currentDestination?.route == screen.route,
                 onClick = {
-                    navController.navigate(screen.route) {
-                        // 루트(Main)까지 pop
-                        popUpTo(AllDestination.Main.route) {
-                            saveState = true
+                    if (navController.currentDestination?.route != screen.route) {
+                        Log.d("AppBottomBar", "Navigating to: ${screen.route}")
+                        navController.navigate(screen.route) {
+                            popUpTo(AllDestination.Main.route) {
+                                inclusive = true // inclusive를 true로 설정
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
                         }
-                        launchSingleTop = true
-                        restoreState = true
                     }
                 },
                 colors = NavigationBarItemDefaults.colors(
