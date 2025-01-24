@@ -3,7 +3,6 @@ package inu.appcenter.intip_android.ui.login
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -25,9 +24,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.ImageLoader
+import coil.compose.AsyncImage
+import coil.decode.SvgDecoder
+import coil.request.CachePolicy
 import inu.appcenter.intip_android.R
 import inu.appcenter.intip_android.model.member.LoginDto
 import inu.appcenter.intip_android.ui.login.util.AgreementText
@@ -43,6 +45,14 @@ fun LoginScreen(
     val authUiState by authViewModel.uiState.collectAsState()
     val context = LocalContext.current
     var passwordVisible by remember { mutableStateOf(false) }
+
+    // SVG 디코딩을 위한 ImageLoader 구성
+    val imageLoader = ImageLoader.Builder(context)
+        .components { add(SvgDecoder.Factory()) }
+        .diskCachePolicy(CachePolicy.ENABLED)  // 디스크 캐시 활성화
+        .memoryCachePolicy(CachePolicy.ENABLED) // 메모리 캐시 활성화
+        .crossfade(true)
+        .build()
 
     // 로그인 성공/실패 감지
     LaunchedEffect(authUiState.loginState) {
@@ -69,9 +79,11 @@ fun LoginScreen(
             .padding(32.dp),
         verticalArrangement = Arrangement.Center
     ) {
-        Image(
-            painter = painterResource(R.drawable.logo),
+        //가로 304 세로 141.6
+        AsyncImage(
+            model = "https://intip.inuappcenter.kr/assets/logo-with-text-BXx_GfoJ.svg",
             contentDescription = "INTIP Logo",
+            imageLoader = imageLoader,
             modifier = Modifier
                 .align(Alignment.CenterHorizontally)
                 .padding(start = 6.dp)
@@ -113,6 +125,7 @@ fun LoginScreen(
 
         LoginButton(
             onClick = {
+                Log.d("LoginButton", "login() 호출 직전")
                 authViewModel.login(
                     LoginDto(
                         studentId = authUiState.loginId,
