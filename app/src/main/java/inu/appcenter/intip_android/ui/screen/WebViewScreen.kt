@@ -40,8 +40,7 @@ fun WebViewScreen(
     Scaffold(
         bottomBar = {
             AppBottomBar(navController)
-        },
-        containerColor = Color.Red
+        }
     ) { paddingValue ->
         val newPaddingValue = PaddingValues(
             start = paddingValue.calculateStartPadding(LayoutDirection.Ltr),

@@ -101,13 +101,14 @@ fun AppBottomBar(
                 },
                 selected = currentDestination?.route == screen.route,
                 onClick = {
+                    Log.d("AppBottomBar", "Button clicked: ${screen.route}")
                     if (navController.currentDestination?.route != screen.route) {
                         Log.d("AppBottomBar", "Navigating to: ${screen.route}")
+                        if (screen.route == AllDestination.Main.route) {
+                            // 'main'을 스택에서 제거
+                            navController.popBackStack(AllDestination.Main.route, inclusive = true)
+                        }
                         navController.navigate(screen.route) {
-                            popUpTo(AllDestination.Main.route) {
-                                inclusive = true // inclusive를 true로 설정
-                                saveState = true
-                            }
                             launchSingleTop = true
                             restoreState = true
                         }
