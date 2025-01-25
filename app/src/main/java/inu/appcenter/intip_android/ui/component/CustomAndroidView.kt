@@ -85,36 +85,63 @@ fun CustomAndroidView(
             webViewClient = object : WebViewClient() {
                 override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
                     request?.url?.let { uri ->
+                        // 1) 외부 도메인 체크
                         if (uri.host != "intip.inuappcenter.kr") {
-                            // 허용되지 않은 도메인 접근 시 네이티브 브라우저로 열기
                             val intent = Intent(Intent.ACTION_VIEW, uri)
                             context.startActivity(intent)
                             return true
                         }
 
-                        when (uri.path) {
-                            Routes.MYPAGE -> {
-                                navigateToDestination(navController, "mypage", AllDestination.MyPage.route)
-                                return true
-                            }
-                            Routes.SAVE -> {
-                                navigateToDestination(navController, "save", AllDestination.Save.route)
-                                return true
-                            }
-                            Routes.WRITE -> {
-                                navigateToDestination(navController, "write", AllDestination.Write.route)
-                                return true
-                            }
-//                            Routes.HOME -> {
-//                                navigateToDestination(navController, "home", AllDestination.Main.route)
-//                                return true
-//                            }
-                            // 추가적인 경로가 필요하면 여기에 추가
-                            else -> {
-                                // 다른 경로는 WebView가 처리하도록 함
+                        // 2) path 추출
+                        val path = uri.path ?: ""
+                        val queryId = uri.getQueryParameter("id") // 동적 라우트라면 id가 있을 수 있음
+
+                        // ---------------------
+                        // [CASE A] 동적 라우트 path에 해당하면
+                        // ---------------------
+                        if (dynamicRoutesMap.containsKey(path)) {
+                            // ex) path="/postdetail" 이면 AllDestination.PostDetail
+                            val destination = dynamicRoutesMap[path]!!
+                            if (queryId.isNullOrEmpty()) {
+                                // id가 없으면 웹에서 잘못된 링크를 준 경우 → 예외 처리
+                                // ex) 그냥 super 처리하거나 토스트 띄우는 등
                                 return super.shouldOverrideUrlLoading(view, request)
                             }
+                            // id가 정상적으로 존재하면
+                            when (destination) {
+                                is AllDestination.PostDetail -> {
+                                    navController.navigate(destination.createRoute(queryId))
+                                }
+                                is AllDestination.CouncilNoticeDetail -> {
+                                    navController.navigate(destination.createRoute(queryId))
+                                }
+                                is AllDestination.PetitionDetail -> {
+                                    navController.navigate(destination.createRoute(queryId))
+                                }
+                                else -> {
+                                    // 혹시 이외에도 동적 라우트가 늘어나면 여기에 추가 가능
+                                }
+                            }
+                            return true
                         }
+
+                        // ---------------------
+                        // [CASE B] 정적 라우트 path인지 확인
+                        // ---------------------
+                        // ex) uri.path = "/home", "/home/tips", "/mypage", ...
+                        // => AllDestination.webViewPage 중에 webPath가 맞는지 찾음
+                        val staticDestination = AllDestination.webViewPage.find { it.webPath == path }
+                        if (staticDestination != null) {
+                            // 네이티브 라우트로 이동
+                            navController.navigate(staticDestination.route)
+                            return true
+                        }
+
+                        // ---------------------
+                        // [CASE C] 매핑되지 않은 path
+                        // ---------------------
+                        // 웹뷰에서 직접 처리하게 두거나, 에러 처리 등
+                        return super.shouldOverrideUrlLoading(view, request)
                     }
                     return super.shouldOverrideUrlLoading(view, request)
                 }
@@ -194,19 +221,19 @@ private fun navigateToDestination(navController: NavController, tab: String, rou
                 }
             }
         }
-//        "home" -> {
-//            if (navController.currentDestination?.route != AllDestination.Main.route) {
-//                navController.navigate(AllDestination.Main.route) {
-//                    popUpTo(AllDestination.Main.route) { inclusive = false }
-//                }
-//            }
-//        }
         // 필요한 다른 탭 추가
         else -> {
             Log.w("AndroidBridge", "Unknown tab: $tab")
         }
     }
-
     // 추가로 route에 따라 페이지를 로드하는 로직을 추가할 수 있습니다.
     // 예: 특정 탭 내에서 특정 페이지로 이동
 }
+
+private val dynamicRoutesMap: Map<String, AllDestination> = mapOf(
+    "/postdetail" to AllDestination.PostDetail,
+    "/councilnoticedetail" to AllDestination.CouncilNoticeDetail,
+    "/petitiondetail" to AllDestination.PetitionDetail
+    // 필요 시 더 추가
+)
+

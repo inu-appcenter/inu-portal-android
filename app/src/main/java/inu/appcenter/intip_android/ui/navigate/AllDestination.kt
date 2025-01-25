@@ -2,6 +2,7 @@ package inu.appcenter.intip_android.ui.navigate
 
 sealed class AllDestination(val route: String, val label: String, val webPath: String? = null) {
     companion object {
+        // 여긴 "id 없이" 웹뷰를 로드하는 페이지 모음
         val webViewPage = listOf(
             Home,
             Tips,
@@ -11,8 +12,6 @@ sealed class AllDestination(val route: String, val label: String, val webPath: S
             Util,
             Council,
             Club,
-            PetitionDetail,
-            CouncilNoticeDetail,
             Rental,
             Write,
             Save,
@@ -25,28 +24,15 @@ sealed class AllDestination(val route: String, val label: String, val webPath: S
         )
     }
 
+    // (정적) 웹뷰 경로 예시
     data object Home : AllDestination("home", "Home", "/home")
     data object Tips : AllDestination("tips", "Tips", "/home/tips")
     data object Menu : AllDestination("menu", "메뉴", "/home/menu")
     data object Calendar : AllDestination("calendar", "일정", "/home/calendar")
     data object Map : AllDestination("map", "지도", "/home/map")
-    data object Util : AllDestination("util", "편이사항", "/home/util")
+    data object Util : AllDestination("util", "편의사항", "/home/util")
     data object Council : AllDestination("council", "총학", "/home/council")
     data object Club : AllDestination("club", "동아리", "/home/club")
-
-    data object PostDetail : AllDestination("postDetail", "게시글 상세", "/postdetail") {
-        fun createRoute(id: String) = "$route?id=$id"
-    }
-
-    data object CouncilNoticeDetail : AllDestination(
-        "councilNoticeDetail",
-        "총학 공지사항",
-        "/councilnoticedetail"
-    ) {
-        fun createRoute(id: String) = "$route?id=$id"
-    }
-
-    data object PetitionDetail : AllDestination("petitionDetail", "청원 상세", "/petitiondetail")
     data object Rental : AllDestination("rental", "대여", "/rental")
     data object Write : AllDestination("write", "Write", "/write")
     data object Save : AllDestination("save", "Save", "/save")
@@ -58,6 +44,21 @@ sealed class AllDestination(val route: String, val label: String, val webPath: S
     data object MyComment : AllDestination("myComment", "내 댓글", "/mypage/comment")
     data object MyDelete : AllDestination("myDelete", "탈퇴", "/mypage/delete")
     //todo: 탈퇴의 더 좋은 이름을 생각해보자
+
+    // (동적) 웹뷰 경로 예시
+    // route = "postDetail/{id}"에 대응
+    data object PostDetail : AllDestination("postDetail", "게시글 상세", "/postdetail") {
+        // 네이티브에서 이동할 때
+        fun createRoute(postId: String): String = "$route/$postId"
+    }
+
+    data object CouncilNoticeDetail : AllDestination("councilNoticeDetail", "총학 공지사항", "/councilnoticedetail") {
+        fun createRoute(noticeId: String): String = "$route/$noticeId"
+    }
+
+    data object PetitionDetail : AllDestination("petitionDetail", "청원 상세", "/petitiondetail") {
+        fun createRoute(petitionId: String): String = "$route/$petitionId"
+    }
 
     data object Login : AllDestination("login", "로그인")
 }

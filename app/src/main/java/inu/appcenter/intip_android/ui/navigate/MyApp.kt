@@ -1,12 +1,19 @@
 package inu.appcenter.intip_android.ui.navigate
 
+import android.util.Log
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.navigation.NavController
+import androidx.navigation.NavDestination
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import inu.appcenter.intip_android.ui.login.AuthViewModel
 import inu.appcenter.intip_android.ui.login.LoginScreen
 import inu.appcenter.intip_android.ui.screen.WebViewScreen
@@ -17,28 +24,29 @@ fun MyApp(authViewModel: AuthViewModel, modifier: Modifier = Modifier) {
     val navController = rememberNavController()
     val uiState by authViewModel.uiState.collectAsState()
 
-//    // 커스텀 네비게이션 스택을 추적하기 위한 리스트
-//    val navigationStack = remember { mutableListOf<String>() }
-//
-//    // 네비게이션 스택 로그를 출력하기 위한 리스너 등록
-//    DisposableEffect(navController) {
-//        val listener = NavController.OnDestinationChangedListener { controller, destination, arguments ->
-//            handleDestinationChange(navigationStack, destination)
-//            Log.d("NavigationStack", "Current Stack: $navigationStack")
-//        }
-//        navController.addOnDestinationChangedListener(listener)
-//
-//        // 컴포저블이 사라질 때 리스너 제거
-//        onDispose {
-//            navController.removeOnDestinationChangedListener(listener)
-//        }
-//    }
+    // 커스텀 네비게이션 스택을 추적하기 위한 리스트
+    val navigationStack = remember { mutableListOf<String>() }
+
+    // 네비게이션 스택 로그를 출력하기 위한 리스너 등록
+    DisposableEffect(navController) {
+        val listener = NavController.OnDestinationChangedListener { controller, destination, arguments ->
+            handleDestinationChange(navigationStack, destination)
+            Log.d("NavigationStack", "Current Stack: $navigationStack")
+        }
+        navController.addOnDestinationChangedListener(listener)
+
+        // 컴포저블이 사라질 때 리스너 제거
+        onDispose {
+            navController.removeOnDestinationChangedListener(listener)
+        }
+    }
 
     NavHost(
         navController = navController,
         startDestination = if(uiState.hasToken == true) AllDestination.Home.route else AllDestination.Login.route,
         modifier = modifier
     ) {
+        // 1) 로그인 페이지
         composable(AllDestination.Login.route) {
             LoginScreen(
                 onLoginSuccess = {
@@ -46,39 +54,88 @@ fun MyApp(authViewModel: AuthViewModel, modifier: Modifier = Modifier) {
                         popUpTo(AllDestination.Login.route) { inclusive = true }
                     }
                 },
-                onLoginError = {
-                },
+                onLoginError = { /* 에러 처리 */ },
                 authViewModel = authViewModel
             )
         }
-        AllDestination.webViewPage.map { destination ->
+
+        // 2) 정적 라우트들 (id 없이 웹뷰만 로드)
+        AllDestination.webViewPage.forEach { destination ->
             composable(destination.route) {
                 WebViewScreen(
                     navController = navController,
+                    // 예) path = "/home" or "/mypage" ...
                     path = destination.webPath!!,
                     authViewModel = authViewModel,
-                    isShowBottomBar = destination in listOf(AllDestination.Home, AllDestination.Write, AllDestination.Save, AllDestination.MyPage)
+                    // 특정 페이지에만 바텀바 보이게 할 수도 있음
+                    isShowBottomBar = destination in listOf(
+                        AllDestination.Home,
+                        AllDestination.Write,
+                        AllDestination.Save,
+                        AllDestination.MyPage
+                    )
                 )
             }
+        }
+
+        // 3) 동적 라우트들: id 필요
+        composable(
+            route = "postDetail/{postId}",
+            arguments = listOf(navArgument("postId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val postId = backStackEntry.arguments?.getString("postId") ?: ""
+            WebViewScreen(
+                navController = navController,
+                // 실제 웹뷰 로드 URL = "/postdetail?id=postId"
+                path = "${AllDestination.PostDetail.webPath}?id=$postId",
+                authViewModel = authViewModel,
+                isShowBottomBar = false
+            )
+        }
+
+        composable(
+            route = "councilNoticeDetail/{noticeId}",
+            arguments = listOf(navArgument("noticeId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val noticeId = backStackEntry.arguments?.getString("noticeId") ?: ""
+            WebViewScreen(
+                navController = navController,
+                path = "${AllDestination.CouncilNoticeDetail.webPath}?id=$noticeId",
+                authViewModel = authViewModel,
+                isShowBottomBar = false
+            )
+        }
+
+        composable(
+            route = "petitionDetail/{petitionId}",
+            arguments = listOf(navArgument("petitionId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val petitionId = backStackEntry.arguments?.getString("petitionId") ?: ""
+            WebViewScreen(
+                navController = navController,
+                path = "${AllDestination.PetitionDetail.webPath}?id=$petitionId",
+                authViewModel = authViewModel,
+                isShowBottomBar = false
+            )
         }
     }
 }
 
-///**
-// * 네비게이션 목적지 변경 시 스택을 업데이트하는 함수
-// */
-//private fun handleDestinationChange(stack: MutableList<String>, destination: NavDestination) {
-//    val route = destination.route ?: "unknown"
-//
-//    // 스택에 이미 존재하는 경로라면 해당 경로 이후의 모든 경로를 제거
-//    val existingIndex = stack.indexOf(route)
-//    if (existingIndex != -1) {
-//        // 현재 목적지가 스택에 이미 존재하면 해당 위치 이후를 제거
-//        while (stack.size > existingIndex + 1) {
-//            stack.removeAt(stack.size - 1)
-//        }
-//    } else {
-//        // 새로운 목적지라면 스택에 추가
-//        stack.add(route)
-//    }
-//}
+/**
+ * 네비게이션 목적지 변경 시 스택을 업데이트하는 함수
+ */
+private fun handleDestinationChange(stack: MutableList<String>, destination: NavDestination) {
+    val route = destination.route ?: "unknown"
+
+    // 스택에 이미 존재하는 경로라면 해당 경로 이후의 모든 경로를 제거
+    val existingIndex = stack.indexOf(route)
+    if (existingIndex != -1) {
+        // 현재 목적지가 스택에 이미 존재하면 해당 위치 이후를 제거
+        while (stack.size > existingIndex + 1) {
+            stack.removeAt(stack.size - 1)
+        }
+    } else {
+        // 새로운 목적지라면 스택에 추가
+        stack.add(route)
+    }
+}
