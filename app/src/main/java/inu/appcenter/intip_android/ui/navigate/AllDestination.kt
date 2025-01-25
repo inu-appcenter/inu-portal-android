@@ -1,6 +1,30 @@
 package inu.appcenter.intip_android.ui.navigate
 
 sealed class AllDestination(val route: String, val label: String, val webPath: String? = null) {
+    companion object {
+        val webViewPage = listOf(
+            Home,
+            Tips,
+            Menu,
+            Calendar,
+            Map,
+            Util,
+            Council,
+            Club,
+            PetitionDetail,
+            CouncilNoticeDetail,
+            Rental,
+            Write,
+            Save,
+            MyPage,
+            Profile,
+            MyPost,
+            MyLike,
+            MyComment,
+            MyDelete
+        )
+    }
+
     data object Home : AllDestination("home", "Home", "/home")
     data object Tips : AllDestination("tips", "Tips", "/home/tips")
     data object Menu : AllDestination("menu", "메뉴", "/home/menu")
@@ -14,8 +38,11 @@ sealed class AllDestination(val route: String, val label: String, val webPath: S
         fun createRoute(id: String) = "$route?id=$id"
     }
 
-    data object CouncilNoticeDetail :
-        AllDestination("councilNoticeDetail", "총학 공지사항", "/councilnoticedetail") {
+    data object CouncilNoticeDetail : AllDestination(
+        "councilNoticeDetail",
+        "총학 공지사항",
+        "/councilnoticedetail"
+    ) {
         fun createRoute(id: String) = "$route?id=$id"
     }
 
@@ -28,8 +55,8 @@ sealed class AllDestination(val route: String, val label: String, val webPath: S
     data object Profile : AllDestination("profile", "프로필", "/mypage/profile")
     data object MyPost : AllDestination("myPost", "내 게시물", "/mypage/post")
     data object MyLike : AllDestination("myLike", "내 좋아요", "/mypage/like")
-    data object MyComment: AllDestination("myComment", "내 댓글", "/mypage/comment")
-    data object MyDelete: AllDestination("myDelete", "탈퇴", "/mypage/delete")
+    data object MyComment : AllDestination("myComment", "내 댓글", "/mypage/comment")
+    data object MyDelete : AllDestination("myDelete", "탈퇴", "/mypage/delete")
     //todo: 탈퇴의 더 좋은 이름을 생각해보자
 
     data object Login : AllDestination("login", "로그인")

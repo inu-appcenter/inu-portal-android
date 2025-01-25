@@ -51,38 +51,15 @@ fun MyApp(authViewModel: AuthViewModel, modifier: Modifier = Modifier) {
                 authViewModel = authViewModel
             )
         }
-        //todo: 나중에 WebViewScreen들은 반복문으로 관리하면 좋을듯
-        composable(AllDestination.Home.route) {
-            WebViewScreen(
-                navController = navController,
-                path = AllDestination.Home.webPath!!,
-                authViewModel = authViewModel,
-                isShowBottomBar = true
-            )
-        }
-        composable(AllDestination.Save.route) {
-            WebViewScreen(
-                navController = navController,
-                path = AllDestination.Save.webPath!!,
-                authViewModel = authViewModel,
-                isShowBottomBar = true
-            )
-        }
-        composable(AllDestination.Write.route) {
-            WebViewScreen(
-                navController = navController,
-                path = AllDestination.Write.webPath!!,
-                authViewModel = authViewModel,
-                isShowBottomBar = true
-            )
-        }
-        composable(AllDestination.MyPage.route) {
-            WebViewScreen(
-                navController = navController,
-                path = AllDestination.MyPage.webPath!!,
-                authViewModel = authViewModel,
-                isShowBottomBar = true
-            )
+        AllDestination.webViewPage.map { destination ->
+            composable(destination.route) {
+                WebViewScreen(
+                    navController = navController,
+                    path = destination.webPath!!,
+                    authViewModel = authViewModel,
+                    isShowBottomBar = destination in listOf(AllDestination.Home, AllDestination.Write, AllDestination.Save, AllDestination.MyPage)
+                )
+            }
         }
     }
 }
