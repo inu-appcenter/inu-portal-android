@@ -30,7 +30,6 @@ sealed class AllDestination(val route: String, val label: String, val webPath: S
     data object Map : AllDestination("map", "지도", "/home/map")
     data object Club : AllDestination("club", "동아리", "/home/club")
     data object Rental : AllDestination("rental", "대여", "/rental")
-    data object Write : AllDestination("write", "Write", "/write")
     data object Save : AllDestination("save", "Save", "/save")
     data object MyPage : AllDestination("myPage", "Mypage", "/mypage")
     data object Profile : AllDestination("profile", "프로필", "/mypage/profile")
@@ -53,10 +52,16 @@ sealed class AllDestination(val route: String, val label: String, val webPath: S
     data object CouncilPetition : AllDestination("council_petition", "청원", "/home/council?type=petition")
     data object CouncilHelloBus : AllDestination("council_hellobus", "헬로버스", "/home/council?type=HelloBus")
 
+    // Write 관련 라우트
+    data object Write : AllDestination("write", "Write", "/write")
+
     // (동적) 웹뷰 경로 예시
-    // route = "postDetail/{id}"에 대응
+    data object WriteEdit : AllDestination("write_edit", "글 수정", "/write") {
+        fun createRoute(postId: String): String = "$route?id=$postId"
+        const val routePattern = "write_edit?id={id}"
+    }
+
     data object PostDetail : AllDestination("postDetail", "게시글 상세", "/postdetail") {
-        // 네이티브에서 이동할 때
         fun createRoute(postId: String): String = "$route/$postId"
     }
 

@@ -78,6 +78,19 @@ fun MyApp(authViewModel: AuthViewModel, modifier: Modifier = Modifier) {
 
         // 3) 동적 라우트들: id 필요
         composable(
+            route = AllDestination.WriteEdit.routePattern,
+            arguments = listOf(navArgument("id") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val postId = backStackEntry.arguments?.getString("id") ?: ""
+            WebViewScreen(
+                navController = navController,
+                path = "${AllDestination.WriteEdit.webPath}?id=$postId",
+                authViewModel = authViewModel,
+                isShowBottomBar = false  // 수정 페이지는 하단바 숨김
+            )
+        }
+
+        composable(
             route = "postDetail/{postId}",
             arguments = listOf(navArgument("postId") { type = NavType.StringType })
         ) { backStackEntry ->

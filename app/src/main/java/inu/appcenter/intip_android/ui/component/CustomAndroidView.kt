@@ -124,6 +124,18 @@ fun CustomAndroidView(
                             "HOST: ${uri.host}, RAW_PATH: $rawPath, CLEANED_PATH: $cleanedPath, ID: $queryId, TYPE: $typeParam"
                         )
 
+                        // Write 페이지 특수 처리
+                        if (cleanedPath == "/write") {
+                            if (queryId != null) {
+                                // 수정 페이지로 이동
+                                navController.navigate(AllDestination.WriteEdit.createRoute(queryId))
+                            } else {
+                                // 새 글 작성 페이지로 이동
+                                navController.navigate(AllDestination.Write.route)
+                            }
+                            return true
+                        }
+
                         // Query Parameter 기반 라우팅 처리
                         when (cleanedPath) {
                             "/home/tips" -> {
