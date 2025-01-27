@@ -237,6 +237,12 @@ fun CustomAndroidView(
  */
 class AndroidBridge(private val navController: NavController) {
     @JavascriptInterface
+    fun goBack() {
+        Handler(Looper.getMainLooper()).post {
+            navController.popBackStack()
+        }
+    }
+    @JavascriptInterface
     fun navigateTo(tab: String, route: String) {
         Handler(Looper.getMainLooper()).post {
             navigateToDestination(navController, tab, route)
