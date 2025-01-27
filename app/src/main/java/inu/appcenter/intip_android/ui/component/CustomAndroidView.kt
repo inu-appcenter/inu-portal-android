@@ -164,9 +164,7 @@ fun CustomAndroidView(
                             }
                         }
 
-                        // ---------------------
                         // [CASE A] 동적 라우트에 해당하는지 확인 (ex: /postdetail)
-                        // ---------------------
                         if (dynamicRoutesMap.containsKey(cleanedPath)) {
                             val destination = dynamicRoutesMap[cleanedPath]!!
                             if (queryId.isNullOrEmpty()) {
@@ -177,15 +175,12 @@ fun CustomAndroidView(
                             when (destination) {
                                 is AllDestination.PostDetail -> {
                                     navController.navigate(destination.createRoute(queryId))
-                                    Log.d("CustomWebView", "Navigate to postDetail/${queryId}")
                                 }
                                 is AllDestination.CouncilNoticeDetail -> {
                                     navController.navigate(destination.createRoute(queryId))
-                                    Log.d("CustomWebView", "Navigate to councilNoticeDetail/${queryId}")
                                 }
                                 is AllDestination.PetitionDetail -> {
                                     navController.navigate(destination.createRoute(queryId))
-                                    Log.d("CustomWebView", "Navigate to petitionDetail/${queryId}")
                                 }
                                 else -> {
                                     Log.w("CustomWebView", "Unknown dynamic destination: $destination")
@@ -194,9 +189,7 @@ fun CustomAndroidView(
                             return true
                         }
 
-                        // ---------------------
                         // [CASE B] 정적 라우트
-                        // ---------------------
                         val staticDestination = AllDestination.webViewPage.find { it.webPath == cleanedPath }
                         if (staticDestination != null) {
                             // ex) /home/tips?type=notice → tips 페이지 이동
@@ -205,9 +198,7 @@ fun CustomAndroidView(
                             return true
                         }
 
-                        // ---------------------
                         // [CASE C] 매핑되지 않은 path
-                        // ---------------------
                         Log.d("CustomWebView", "매핑되지 않은 path -> 웹뷰에서 처리: $cleanedPath")
                         return super.shouldOverrideUrlLoading(view, request)
                     }
@@ -254,48 +245,6 @@ class AndroidBridge(private val navController: NavController) {
             navController.popBackStack()
         }
     }
-    @JavascriptInterface
-    fun navigateTo(tab: String, route: String) {
-        Handler(Looper.getMainLooper()).post {
-            navigateToDestination(navController, tab, route)
-        }
-    }
-}
-
-/**
- * 네이티브 네비게이션을 처리하는 공통 함수
- */
-private fun navigateToDestination(navController: NavController, tab: String, route: String) {
-    Log.d("AndroidBridge", "navigateToDestination: tab=$tab, route=$route")
-    when (tab) {
-        "mypage" -> {
-            if (navController.currentDestination?.route != AllDestination.MyPage.route) {
-                navController.navigate(AllDestination.MyPage.route) {
-                    popUpTo(AllDestination.Home.route) { inclusive = false }
-                }
-            }
-        }
-        "save" -> {
-            if (navController.currentDestination?.route != AllDestination.Save.route) {
-                navController.navigate(AllDestination.Save.route) {
-                    popUpTo(AllDestination.Home.route) { inclusive = false }
-                }
-            }
-        }
-        "write" -> {
-            if (navController.currentDestination?.route != AllDestination.Write.route) {
-                navController.navigate(AllDestination.Write.route) {
-                    popUpTo(AllDestination.Home.route) { inclusive = false }
-                }
-            }
-        }
-        // 필요한 다른 탭 추가
-        else -> {
-            Log.w("AndroidBridge", "Unknown tab: $tab")
-        }
-    }
-    // 추가로 route에 따라 페이지를 로드하는 로직을 추가할 수 있습니다.
-    // 예: 특정 탭 내에서 특정 페이지로 이동
 }
 
 private val dynamicRoutesMap: Map<String, AllDestination> = mapOf(
