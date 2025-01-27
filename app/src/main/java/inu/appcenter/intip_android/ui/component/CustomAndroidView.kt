@@ -35,17 +35,31 @@ fun CustomAndroidView(
     val context = LocalContext.current
     val WEB_BASE_URL = "https://intip.inuappcenter.kr/app"
 
+    // URL과 쿼리 파라미터 처리
     val url = try {
+        val baseUri = Uri.parse("$WEB_BASE_URL$path")
+        val urlBuilder = baseUri.buildUpon()
+
+        // 토큰이 있다면 추가
         token?.let {
-            val baseUri = Uri.parse("$WEB_BASE_URL$path")
-            val urlBuilder = baseUri.buildUpon()
             urlBuilder.appendQueryParameter("token", it)
-            urlBuilder.toString()
-        } ?: "$WEB_BASE_URL$path"
+        }
+
+        // council 페이지의 경우 기본 type=notice 추가
+        if (path == "/home/council" && !baseUri.getQueryParameter("type").isNullOrEmpty()) {
+            urlBuilder.appendQueryParameter("type", "notice")
+        }
+        // util 페이지의 경우 기본 type=book 추가
+        if (path == "/home/util" && baseUri.getQueryParameter("type").isNullOrEmpty()) {
+            urlBuilder.appendQueryParameter("type", "book")
+        }
+
+        urlBuilder.toString()
     } catch (e: UnsupportedEncodingException) {
         Log.e("CustomAndroidView", "URL 인코딩 에러: ${e.message}")
         "$WEB_BASE_URL$path"
     }
+
     // WebView 인스턴스 생성 (remember로 구성 생명주기 내에서 유지)
     val webView = remember { WebView(context) }
 
@@ -83,9 +97,6 @@ fun CustomAndroidView(
 
             webViewClient = object : WebViewClient() {
                 override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
-                    // 1) 로그로 확인
-                    Log.d("CustomWebView", "shouldOverrideUrlLoading 호출됨, request = $request")
-
                     request?.url?.let { uri ->
                         Log.d("CustomWebView", "Intercepted URL: $uri")
 
@@ -97,9 +108,8 @@ fun CustomAndroidView(
                             return true
                         }
 
-                        // 2) path / query 파라미터 확인
+                        // 2) path와 query 파라미터 처리
                         val rawPath = uri.path ?: ""
-                        // "/app/postdetail"라면 -> "/postdetail"
                         val cleanedPath = if (rawPath.startsWith("/app")) {
                             rawPath.removePrefix("/app")
                         } else {
@@ -107,8 +117,40 @@ fun CustomAndroidView(
                         }
 
                         val queryId = uri.getQueryParameter("id")
+                        val typeParam = uri.getQueryParameter("type")
 
-                        Log.d("CustomWebView", "HOST: ${uri.host}, PATH: $path, QUERY_ID: $queryId")
+                        Log.d(
+                            "CustomWebView",
+                            "HOST: ${uri.host}, RAW_PATH: $rawPath, CLEANED_PATH: $cleanedPath, ID: $queryId, TYPE: $typeParam"
+                        )
+
+                        // Query Parameter 기반 라우팅 처리
+                        when (cleanedPath) {
+                            "/home/tips" -> {
+                                when (typeParam) {
+                                    "notice" -> navController.navigate(AllDestination.TipsNotice.route)
+                                    else -> navController.navigate(AllDestination.Tips.route)
+                                }
+                                return true
+                            }
+                            "/home/council" -> {
+                                when (typeParam) {
+                                    "notice" -> navController.navigate(AllDestination.CouncilNotice.route)
+                                    "petition" -> navController.navigate(AllDestination.CouncilPetition.route)
+                                    "HelloBus" -> navController.navigate(AllDestination.CouncilHelloBus.route)
+                                    else -> navController.navigate(AllDestination.CouncilNotice.route)
+                                }
+                                return true
+                            }
+                            "/home/util" -> {
+                                when (typeParam) {
+                                    "book" -> navController.navigate(AllDestination.UtilBook.route)
+                                    "lost" -> navController.navigate(AllDestination.UtilLost.route)
+                                    else -> navController.navigate(AllDestination.UtilBook.route)
+                                }
+                                return true
+                            }
+                        }
 
                         // ---------------------
                         // [CASE A] 동적 라우트에 해당하는지 확인 (ex: /postdetail)
@@ -116,45 +158,45 @@ fun CustomAndroidView(
                         if (dynamicRoutesMap.containsKey(cleanedPath)) {
                             val destination = dynamicRoutesMap[cleanedPath]!!
                             if (queryId.isNullOrEmpty()) {
-                                Log.w("CustomWebView", "id가 없어서 처리 불가 -> 웹뷰로 처리")
+                                Log.w("CustomWebView", "동적 라우트인데 id가 없음 → 웹뷰로 처리")
                                 return super.shouldOverrideUrlLoading(view, request)
                             }
-
-                            // id가 있으니 네이티브 라우트로 이동
+                            // ex) /postdetail -> PostDetail
                             when (destination) {
                                 is AllDestination.PostDetail -> {
                                     navController.navigate(destination.createRoute(queryId))
-                                    Log.d("CustomWebView", "네비게이트 -> ${destination.createRoute(queryId)}")
+                                    Log.d("CustomWebView", "Navigate to postDetail/${queryId}")
                                 }
                                 is AllDestination.CouncilNoticeDetail -> {
                                     navController.navigate(destination.createRoute(queryId))
-                                    Log.d("CustomWebView", "네비게이트 -> ${destination.createRoute(queryId)}")
+                                    Log.d("CustomWebView", "Navigate to councilNoticeDetail/${queryId}")
                                 }
                                 is AllDestination.PetitionDetail -> {
                                     navController.navigate(destination.createRoute(queryId))
-                                    Log.d("CustomWebView", "네비게이트 -> ${destination.createRoute(queryId)}")
+                                    Log.d("CustomWebView", "Navigate to petitionDetail/${queryId}")
                                 }
                                 else -> {
-                                    Log.w("CustomWebView", "알 수 없는 동적 라우트 대상: $destination")
+                                    Log.w("CustomWebView", "Unknown dynamic destination: $destination")
                                 }
                             }
                             return true
                         }
 
                         // ---------------------
-                        // [CASE B] 정적 라우트 path인지 확인
+                        // [CASE B] 정적 라우트
                         // ---------------------
-                        // 2) 정적 라우트
                         val staticDestination = AllDestination.webViewPage.find { it.webPath == cleanedPath }
                         if (staticDestination != null) {
+                            // ex) /home/tips?type=notice → tips 페이지 이동
                             navController.navigate(staticDestination.route)
+                            Log.d("CustomWebView", "정적 라우트 이동 -> ${staticDestination.route}")
                             return true
                         }
 
                         // ---------------------
                         // [CASE C] 매핑되지 않은 path
                         // ---------------------
-                        Log.d("CustomWebView", "매핑되지 않은 path -> 웹뷰에서 처리: $path")
+                        Log.d("CustomWebView", "매핑되지 않은 path -> 웹뷰에서 처리: $cleanedPath")
                         return super.shouldOverrideUrlLoading(view, request)
                     }
                     return super.shouldOverrideUrlLoading(view, request)
@@ -171,22 +213,11 @@ fun CustomAndroidView(
                         )
                     }
                 }
-
-                override fun shouldInterceptRequest(
-                    view: WebView?,
-                    request: WebResourceRequest?
-                ): WebResourceResponse? {
-                    request?.url?.let {
-                        Log.d("WebViewRequest", "shouldInterceptRequest: $it")
-                    }
-                    return super.shouldInterceptRequest(view, request)
-                }
             }
         }
 
         // onDispose 시 WebView 자원 정리
         onDispose {
-            Log.d("CustomWebView", "onDispose 호출 -> webView.destroy()")
             webView.destroy()
         }
     }

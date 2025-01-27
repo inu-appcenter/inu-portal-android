@@ -64,10 +64,8 @@ fun MyApp(authViewModel: AuthViewModel, modifier: Modifier = Modifier) {
             composable(destination.route) {
                 WebViewScreen(
                     navController = navController,
-                    // 예) path = "/home" or "/mypage" ...
                     path = destination.webPath!!,
                     authViewModel = authViewModel,
-                    // 특정 페이지에만 바텀바 보이게 할 수도 있음
                     isShowBottomBar = destination in listOf(
                         AllDestination.Home,
                         AllDestination.Write,

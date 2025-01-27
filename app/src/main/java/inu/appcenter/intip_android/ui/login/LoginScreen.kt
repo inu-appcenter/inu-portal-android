@@ -81,7 +81,7 @@ fun LoginScreen(
     ) {
         //가로 304 세로 141.6
         AsyncImage(
-            model = "https://intip.inuappcenter.kr/assets/logo-with-text-BXx_GfoJ.svg",
+            model = "https://intip.inuappcenter.kr/assets/logo-with-text-FfH8Z-gk.svg",
             contentDescription = "INTIP Logo",
             imageLoader = imageLoader,
             modifier = Modifier
