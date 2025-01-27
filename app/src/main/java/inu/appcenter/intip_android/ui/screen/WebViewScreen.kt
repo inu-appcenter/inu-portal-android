@@ -60,7 +60,8 @@ fun WebViewScreen(
                     modifier = Modifier.padding(newPaddingValue),
                     path = path,
                     token = uiState.token,   // 토큰 전달
-                    navController = navController
+                    navController = navController,
+                    authViewModel = authViewModel
                 )
             }
 

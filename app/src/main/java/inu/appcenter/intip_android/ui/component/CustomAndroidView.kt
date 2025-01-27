@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.navigation.NavController
+import inu.appcenter.intip_android.ui.login.AuthViewModel
 import inu.appcenter.intip_android.ui.navigate.AllDestination
 import java.io.UnsupportedEncodingException
 
@@ -30,7 +31,8 @@ fun CustomAndroidView(
     modifier: Modifier = Modifier,
     path: String,
     token: String? = null,
-    navController: NavController
+    navController: NavController,
+    authViewModel: AuthViewModel
 ) {
     val context = LocalContext.current
     val WEB_BASE_URL = "https://intip.inuappcenter.kr/app"
@@ -81,7 +83,7 @@ fun CustomAndroidView(
             }
 
             // JavaScript Interface 추가
-            addJavascriptInterface(AndroidBridge(navController), "AndroidBridge")
+            addJavascriptInterface(AndroidBridge(navController, authViewModel), "AndroidBridge")
 
             webChromeClient = object : WebChromeClient() {
                 override fun onConsoleMessage(consoleMessage: ConsoleMessage): Boolean {
@@ -238,11 +240,25 @@ fun CustomAndroidView(
 /**
  * JavaScript와 네이티브 간의 브리지를 담당하는 클래스
  */
-class AndroidBridge(private val navController: NavController) {
+class AndroidBridge(
+    private val navController: NavController,
+    private val authViewModel: AuthViewModel
+) {
     @JavascriptInterface
     fun goBack() {
         Handler(Looper.getMainLooper()).post {
             navController.popBackStack()
+        }
+    }
+
+    @JavascriptInterface
+        fun handleLogout() {
+        Handler(Looper.getMainLooper()).post {
+            authViewModel.logout()
+            // 로그인 화면으로 이동하고 백스택 클리어
+            navController.navigate("login") {
+                popUpTo(0) { inclusive = true }
+            }
         }
     }
 }
