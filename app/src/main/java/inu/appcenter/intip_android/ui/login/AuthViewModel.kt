@@ -31,7 +31,6 @@ data class AuthUiState(
     val logoutState: AuthState = AuthState.Idle,
     val loginId: String = "",
     val loginPw: String = "",
-    val saveTokenState: Boolean? = null,
     val hasToken: Boolean? = null,
     val token: String? = null
 )
@@ -264,7 +263,9 @@ class AuthViewModel(
             it.copy(
                 loginState = AuthState.Idle,
                 logoutState = AuthState.Idle,
-                saveTokenState = null
+                loginId = "",
+                loginPw = "",
+                token = null
             )
         }
     }

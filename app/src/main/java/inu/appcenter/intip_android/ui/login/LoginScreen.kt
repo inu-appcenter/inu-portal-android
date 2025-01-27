@@ -42,6 +42,10 @@ fun LoginScreen(
     onLoginSuccess: () -> Unit,
     onLoginError: (String) -> Unit
 ) {
+    LaunchedEffect(Unit) {
+        authViewModel.resetState()
+    }
+
     val authUiState by authViewModel.uiState.collectAsState()
     val context = LocalContext.current
     var passwordVisible by remember { mutableStateOf(false) }
