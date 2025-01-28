@@ -59,7 +59,7 @@ fun MyApp(authViewModel: AuthViewModel, modifier: Modifier = Modifier) {
             )
         }
 
-        // 2) 정적 라우트들 (id 없이 웹뷰만 로드)
+        // 2) 정적 라우트들 (쿼리 없이 웹뷰만 로드)
         AllDestination.webViewPage.forEach { destination ->
             composable(destination.route) {
                 WebViewScreen(
@@ -76,7 +76,20 @@ fun MyApp(authViewModel: AuthViewModel, modifier: Modifier = Modifier) {
             }
         }
 
-        // 3) 동적 라우트들: id 필요
+        // 3) 동적 라우트들: 쿼리 필요
+        composable(
+            route = AllDestination.TipsSearch.routePattern,
+            arguments = listOf(navArgument("search") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val searchQuery = backStackEntry.arguments?.getString("search") ?: ""
+            WebViewScreen(
+                navController = navController,
+                path = "${AllDestination.TipsSearch.webPath}?search=$searchQuery",
+                authViewModel = authViewModel,
+                isShowBottomBar = false
+            )
+        }
+
         composable(
             route = AllDestination.WriteEdit.routePattern,
             arguments = listOf(navArgument("id") { type = NavType.StringType })

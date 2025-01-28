@@ -85,11 +85,6 @@ fun AppBottomBar(
                         contentDescription = screen.route,
                         modifier = Modifier.size(21.dp)
                     )
-//                    Column(
-//                        horizontalAlignment = Alignment.CenterHorizontally,
-//                        verticalArrangement = Arrangement.spacedBy(6.89.dp) // 여기서 간격을 조절합니다
-//                    ) {
-//                    }
                 },
                 label = {
                     Text(

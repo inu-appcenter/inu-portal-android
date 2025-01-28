@@ -141,8 +141,12 @@ fun CustomAndroidView(
                         // Query Parameter 기반 라우팅 처리
                         when (cleanedPath) {
                             "/home/tips" -> {
-                                when (typeParam) {
-                                    "notice" -> navController.navigate(AllDestination.TipsNotice.route)
+                                when {
+                                    typeParam == "notice" -> navController.navigate(AllDestination.TipsNotice.route)
+                                    !uri.getQueryParameter("search").isNullOrEmpty() -> {
+                                        val searchQuery = uri.getQueryParameter("search") ?: ""
+                                        navController.navigate(AllDestination.TipsSearch.createRoute(searchQuery))
+                                    }
                                     else -> navController.navigate(AllDestination.Tips.route)
                                 }
                                 return true

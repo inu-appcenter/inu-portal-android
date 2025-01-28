@@ -56,6 +56,11 @@ sealed class AllDestination(val route: String, val label: String, val webPath: S
     data object Write : AllDestination("write", "Write", "/write")
 
     // (동적) 웹뷰 경로 예시
+    data object TipsSearch : AllDestination("tips_search", "Tips 검색", "/home/tips") {
+        fun createRoute(searchQuery: String): String = "$route?search=$searchQuery"
+        const val routePattern = "tips_search?search={search}"
+    }
+
     data object WriteEdit : AllDestination("write_edit", "글 수정", "/write") {
         fun createRoute(postId: String): String = "$route?id=$postId"
         const val routePattern = "write_edit?id={id}"
