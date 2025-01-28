@@ -56,7 +56,12 @@ fun WebViewScreen(
                 bottom = paddingValue.calculateBottomPadding() - 20.dp // Scafflod의 기본 BottomPadding에서 BottomNavigation의 둥근 정도를 뺀 값
             )
         } else {
-            paddingValue
+            PaddingValues(
+                start = paddingValue.calculateStartPadding(LayoutDirection.Ltr),
+                end = paddingValue.calculateEndPadding(LayoutDirection.Rtl),
+                top = 0.dp,  // 상태바 영역의 패딩을 제거
+                bottom = paddingValue.calculateBottomPadding()
+            )
         }
         // 유효 토큰이 있는 경우에만 WebView 보여주기
         if (uiState.hasToken == true && !uiState.token.isNullOrEmpty()) {
