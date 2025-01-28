@@ -98,10 +98,17 @@ fun AppBottomBar(
                     Log.d("AppBottomBar", "Button clicked: ${screen.route}")
                     if (navController.currentDestination?.route != screen.route) {
                         Log.d("AppBottomBar", "Navigating to: ${screen.route}")
-                        if (screen.route == AllDestination.Home.route) {
-                            navController.popBackStack(AllDestination.Home.route, inclusive = true)
+                        navController.navigate(screen.route) {
+                            // Home을 스택의 시작점으로 유지
+                            popUpTo(AllDestination.Home.route) {
+                                // Home으로 가는 경우가 아니면 Home은 스택에 유지
+                                inclusive = (screen.route == AllDestination.Home.route)
+                            }
+                            // 중복 방지
+                            launchSingleTop = true
+                            // 같은 화면으로 이동할 때 애니메이션 방지
+                            restoreState = true
                         }
-                        navController.navigate(screen.route)
                     }
                 },
                 colors = NavigationBarItemDefaults.colors(

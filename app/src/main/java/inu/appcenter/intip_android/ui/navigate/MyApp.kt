@@ -23,14 +23,11 @@ fun MyApp(authViewModel: AuthViewModel, modifier: Modifier = Modifier) {
     val uiState by authViewModel.uiState.collectAsState()
     val context = LocalContext.current
 
-    // Home 화면에서 뒤로가기 처리
+    // 뒤로가기 처리 - Home에서만 앱 종료
     BackHandler(enabled = true) {
-        val currentRoute = navController.currentBackStackEntry?.destination?.route
-        if (currentRoute == AllDestination.Home.route) {
-            // Home 화면에서는 앱 종료
+        if (navController.currentBackStackEntry?.destination?.route == AllDestination.Home.route) {
             (context as? Activity)?.finish()
         } else {
-            // 다른 화면에서는 일반적인 뒤로가기
             navController.popBackStack()
         }
     }
