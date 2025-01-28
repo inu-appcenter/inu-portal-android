@@ -1,5 +1,6 @@
 package inu.appcenter.intip_android.ui.component
 
+import android.app.Activity
 import android.content.Intent
 import android.net.Uri
 import android.os.Handler
@@ -13,6 +14,7 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -36,6 +38,18 @@ fun CustomAndroidView(
 ) {
     val context = LocalContext.current
     val WEB_BASE_URL = "https://intip.inuappcenter.kr/app"
+
+    // Handle back press for WebView
+    BackHandler {
+        val currentRoute = navController.currentBackStackEntry?.destination?.route
+        if (currentRoute == AllDestination.Home.route) {
+            // If on Home screen, exit the app
+            (context as? Activity)?.finishAffinity()
+        } else {
+            // Normal back navigation
+            navController.popBackStack()
+        }
+    }
 
     // URL과 쿼리 파라미터 처리
     val url = try {

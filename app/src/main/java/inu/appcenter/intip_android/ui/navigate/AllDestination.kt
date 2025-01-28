@@ -1,6 +1,6 @@
 package inu.appcenter.intip_android.ui.navigate
 
-sealed class AllDestination(val route: String, val label: String, val webPath: String? = null) {
+sealed class AllDestination(val route: String, val label: String, val webPath: String? = "") {
     companion object {
         val webViewPage = listOf(
             Home,
@@ -78,5 +78,5 @@ sealed class AllDestination(val route: String, val label: String, val webPath: S
         fun createRoute(petitionId: String): String = "$route/$petitionId"
     }
 
-    data object Login : AllDestination("login", "로그인")
+    data object Login : AllDestination("login", "로그인", "")
 }
