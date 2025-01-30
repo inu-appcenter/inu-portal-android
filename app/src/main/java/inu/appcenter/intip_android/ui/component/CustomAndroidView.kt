@@ -188,10 +188,9 @@ fun CustomAndroidView(
                                 }
                                 return true
                             }
-                            AllDestination.MyPage.webPath -> {
-                                navController.navigate(AllDestination.MyPage.route)
-                            }
                         }
+
+
 
                         // [CASE A] 동적 라우트에 해당하는지 확인 (ex: /postdetail)
                         val dynamicDestination = dynamicRoutesMap[cleanedPath]
@@ -230,6 +229,11 @@ fun CustomAndroidView(
                                 Log.d("CustomWebView", "정적 라우트 이동 -> ${staticDestination.route}")
                             }
                             return true
+                        }
+
+                        val destination = AllDestination.webViewPage.find { it.webPath == cleanedPath }
+                        destination?.let {
+                            navController.navigate(it.route)
                         }
 
                         // [CASE C] 매핑되지 않은 path
