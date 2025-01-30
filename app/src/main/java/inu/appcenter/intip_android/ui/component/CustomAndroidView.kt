@@ -188,6 +188,9 @@ fun CustomAndroidView(
                                 }
                                 return true
                             }
+                            AllDestination.MyPage.webPath -> {
+                                navController.navigate(AllDestination.MyPage.route)
+                            }
                         }
 
                         // [CASE A] 동적 라우트에 해당하는지 확인 (ex: /postdetail)
