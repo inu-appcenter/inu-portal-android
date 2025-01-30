@@ -115,7 +115,7 @@ fun MyApp(authViewModel: AuthViewModel, modifier: Modifier = Modifier) {
         }
 
         composable(
-            route = "postDetail/{postId}",
+            route = AllDestination.PostDetail.routePattern,
             arguments = listOf(navArgument("postId") { type = NavType.StringType })
         ) { backStackEntry ->
             val postId = backStackEntry.arguments?.getString("postId") ?: ""
@@ -129,7 +129,7 @@ fun MyApp(authViewModel: AuthViewModel, modifier: Modifier = Modifier) {
         }
 
         composable(
-            route = "councilNoticeDetail/{noticeId}",
+            route = AllDestination.CouncilNoticeDetail.routePattern,
             arguments = listOf(navArgument("noticeId") { type = NavType.StringType })
         ) { backStackEntry ->
             val noticeId = backStackEntry.arguments?.getString("noticeId") ?: ""
@@ -142,7 +142,7 @@ fun MyApp(authViewModel: AuthViewModel, modifier: Modifier = Modifier) {
         }
 
         composable(
-            route = "petitionDetail/{petitionId}",
+            route = AllDestination.PetitionDetail.routePattern,
             arguments = listOf(navArgument("petitionId") { type = NavType.StringType })
         ) { backStackEntry ->
             val petitionId = backStackEntry.arguments?.getString("petitionId") ?: ""

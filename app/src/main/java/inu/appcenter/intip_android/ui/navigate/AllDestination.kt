@@ -71,14 +71,17 @@ sealed class AllDestination(val route: String, val label: String, val webPath: S
 
     data object PostDetail : AllDestination("postDetail", "게시글 상세", "/postdetail") {
         fun createRoute(postId: String): String = "$route/$postId"
+        const val routePattern = "postDetail/{postId}"
     }
 
     data object CouncilNoticeDetail : AllDestination("councilNoticeDetail", "총학 공지사항", "/councilnoticedetail") {
         fun createRoute(noticeId: String): String = "$route/$noticeId"
+        const val routePattern = "councilNoticeDetail/{noticeId}"
     }
 
     data object PetitionDetail : AllDestination("petitionDetail", "청원 상세", "/petitiondetail") {
         fun createRoute(petitionId: String): String = "$route/$petitionId"
+        const val routePattern = "petitionDetail/{petitionId}"
     }
 
     data object Login : AllDestination("login", "로그인", "/login")
