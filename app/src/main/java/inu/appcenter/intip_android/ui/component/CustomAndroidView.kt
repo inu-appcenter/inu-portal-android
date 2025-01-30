@@ -1,6 +1,5 @@
 package inu.appcenter.intip_android.ui.component
 
-import AllDestination
 import android.app.Activity
 import android.content.Intent
 import android.net.Uri
@@ -25,6 +24,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.navigation.NavController
 import inu.appcenter.intip_android.ui.login.AuthViewModel
+import inu.appcenter.intip_android.ui.navigate.AllDestination
 import java.io.UnsupportedEncodingException
 
 @Composable
@@ -218,7 +218,7 @@ fun CustomAndroidView(
                         }
 
                         // [CASE B] 정적 라우트
-                        val staticDestination = AllDestination.getRoute(cleanedPath.removePrefix("/"))
+                        val staticDestination = AllDestination.webViewPage.find { it.webPath == cleanedPath }
                         if (staticDestination != null) {
                             val currentRoute = navController.currentBackStackEntry?.destination?.route
                             if (staticDestination.route != currentRoute) {

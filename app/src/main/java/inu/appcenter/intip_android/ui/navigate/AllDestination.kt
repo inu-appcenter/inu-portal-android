@@ -1,12 +1,33 @@
-import android.util.Log
+package inu.appcenter.intip_android.ui.navigate
 
 sealed class AllDestination(val route: String, val label: String, val webPath: String) {
+    companion object {
+        val webViewPage = listOf(
+            Home,
+            Tips, TipsNotice,  // Tips 관련 페이지들
+            Menu,
+            Calendar,
+            Map,
+            Util, UtilBook, UtilLost,  // Util 관련 페이지들
+            Council, CouncilNotice, CouncilPetition, CouncilHelloBus,  // Council 관련 페이지들
+            Club,
+            Rental,
+            Write,
+            Save,
+            MyPage,
+            Profile,
+            MyPost,
+            MyLike,
+            MyComment,
+            MyDelete
+        )
+    }
 
     // (정적) 웹뷰 경로 예시
     data object Home : AllDestination("home", "Home", "/home")
     data object Menu : AllDestination("menu", "메뉴", "/home/menu")
     data object Calendar : AllDestination("calendar", "일정", "/home/calendar")
-    data object MapPage : AllDestination("map", "지도", "/home/map") // 이름 변경
+    data object Map : AllDestination("map", "지도", "/home/map")
     data object Club : AllDestination("club", "동아리", "/home/club")
     data object Rental : AllDestination("rental", "대여", "/rental")
     data object Save : AllDestination("save", "Save", "/save")
@@ -17,6 +38,8 @@ sealed class AllDestination(val route: String, val label: String, val webPath: S
     data object MyComment : AllDestination("myComment", "내 댓글", "/mypage/comment")
     data object MyDelete : AllDestination("myDelete", "탈퇴", "/mypage/delete")
     //todo: 탈퇴의 더 좋은 이름을 생각해보자
+
+    data object Splash : AllDestination("splash", "Splash", "")
 
     // Tips 관련 라우트
     data object Tips : AllDestination("tips", "Tips", "/home/tips")
@@ -45,60 +68,17 @@ sealed class AllDestination(val route: String, val label: String, val webPath: S
         const val routePattern = "write_edit?id={id}"
     }
 
-    // PostDetail 수정
     data object PostDetail : AllDestination("postDetail", "게시글 상세", "/postdetail") {
-        fun createRoute(postId: String): String = "postDetail/$postId"
-        const val routePattern = "postDetail/{postId}"
+        fun createRoute(postId: String): String = "$route/$postId"
     }
 
-    // CouncilNoticeDetail 수정
     data object CouncilNoticeDetail : AllDestination("councilNoticeDetail", "총학 공지사항", "/councilnoticedetail") {
-        fun createRoute(noticeId: String): String = "councilNoticeDetail/$noticeId"
-        const val routePattern = "councilNoticeDetail/{noticeId}"
+        fun createRoute(noticeId: String): String = "$route/$noticeId"
     }
 
-    // PetitionDetail 수정
     data object PetitionDetail : AllDestination("petitionDetail", "청원 상세", "/petitiondetail") {
-        fun createRoute(petitionId: String): String = "petitionDetail/$petitionId"
-        const val routePattern = "petitionDetail/{petitionId}"
+        fun createRoute(petitionId: String): String = "$route/$petitionId"
     }
 
     data object Login : AllDestination("login", "로그인", "/login")
-
-    companion object {
-        val webViewPage = listOfNotNull(
-            Home,
-            Tips, TipsNotice,  // Tips 관련 페이지들
-            Menu,
-            Calendar,
-            MapPage,             // 이름 변경
-            Util, UtilBook, UtilLost,  // Util 관련 페이지들
-            Council, CouncilNotice, CouncilPetition, CouncilHelloBus,  // Council 관련 페이지들
-            Club,
-            Rental,
-            Write,
-            Save,
-            MyPage,
-            Profile,
-            MyPost,
-            MyLike,
-            MyComment,
-            MyDelete
-        )
-
-        // 모든 경로를 맵으로 매핑
-        private val routeMap: Map<String, AllDestination> = webViewPage.associateBy { it.route }
-
-        init {
-            Log.d("AllDestination", "Routes: ${routeMap.keys}")
-        }
-
-        /**
-         * 주어진 route 문자열에 해당하는 AllDestination 객체를 반환합니다.
-         * 존재하지 않으면 null을 반환합니다.
-         */
-        fun getRoute(route: String): AllDestination? {
-            return routeMap[route]
-        }
-    }
 }

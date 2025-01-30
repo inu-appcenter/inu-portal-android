@@ -1,21 +1,22 @@
 package inu.appcenter.intip_android.ui.navigate
 
+import android.app.Activity
 import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import inu.appcenter.intip_android.ui.component.SplashScreen
 import inu.appcenter.intip_android.ui.login.AuthViewModel
 import inu.appcenter.intip_android.ui.login.LoginScreen
 import inu.appcenter.intip_android.ui.screen.WebViewScreen
-import android.app.Activity
-import android.util.Log
-import androidx.compose.ui.platform.LocalContext
 
 @Composable
 fun MyApp(authViewModel: AuthViewModel, modifier: Modifier = Modifier) {
@@ -32,19 +33,36 @@ fun MyApp(authViewModel: AuthViewModel, modifier: Modifier = Modifier) {
         }
     }
 
+//    // 네비게이션 스택 로그를 출력하기 위한 리스너 등록
+//    DisposableEffect(navController) {
+//        val listener = NavController.OnDestinationChangedListener { controller, destination, arguments ->
+//            handleDestinationChange(navigationStack, destination)
+//            Log.d("NavigationStack", "Current Stack: $navigationStack")
+//        }
+//        navController.addOnDestinationChangedListener(listener)
+//
+//        // 컴포저블이 사라질 때 리스너 제거
+//        onDispose {
+//            navController.removeOnDestinationChangedListener(listener)
+//        }
+//    }
+
     NavHost(
         navController = navController,
-        startDestination = AllDestination.Home.route, // 시작점을 Home.route로 변경
+        startDestination = AllDestination.Splash.route,
         modifier = modifier
     ) {
-        // 로그인 페이지
+
+        composable(AllDestination.Splash.route) {
+            SplashScreen(navController = navController)
+        }
+
+        // 1) 로그인 페이지
         composable(AllDestination.Login.route) {
-            Log.d("NavHost", "Navigating to Login Screen")
             LoginScreen(
                 onLoginSuccess = {
                     navController.navigate(AllDestination.Home.route) {
-                        launchSingleTop = true
-                        restoreState = true
+                        popUpTo(AllDestination.Login.route) { inclusive = true }
                     }
                 },
                 onLoginError = { /* 에러 처리 */ },
@@ -52,24 +70,15 @@ fun MyApp(authViewModel: AuthViewModel, modifier: Modifier = Modifier) {
             )
         }
 
-        // Home 경로를 직접 추가하여 테스트
-        composable(AllDestination.Home.route) {
-            WebViewScreen(
-                navController = navController,
-                path = AllDestination.Home.webPath,
-                authViewModel = authViewModel,
-                isShowBottomBar = true
-            )
-        }
-
-        // 기타 정적 라우트들
-        AllDestination.webViewPage.filter { it != AllDestination.Home }.forEach { destination ->
+        // 2) 정적 라우트들 (쿼리 없이 웹뷰만 로드)
+        AllDestination.webViewPage.forEach { destination ->
             composable(destination.route) {
                 WebViewScreen(
                     navController = navController,
                     path = destination.webPath,
                     authViewModel = authViewModel,
                     isShowBottomBar = destination in listOf(
+                        AllDestination.Home,
                         AllDestination.Write,
                         AllDestination.Save,
                         AllDestination.MyPage
@@ -78,7 +87,7 @@ fun MyApp(authViewModel: AuthViewModel, modifier: Modifier = Modifier) {
             }
         }
 
-        // 동적 라우트들: 쿼리 필요
+        // 3) 동적 라우트들: 쿼리 필요
         composable(
             route = AllDestination.TipsSearch.routePattern,
             arguments = listOf(navArgument("search") { type = NavType.StringType })
@@ -106,12 +115,13 @@ fun MyApp(authViewModel: AuthViewModel, modifier: Modifier = Modifier) {
         }
 
         composable(
-            route = AllDestination.PostDetail.routePattern,
+            route = "postDetail/{postId}",
             arguments = listOf(navArgument("postId") { type = NavType.StringType })
         ) { backStackEntry ->
             val postId = backStackEntry.arguments?.getString("postId") ?: ""
             WebViewScreen(
                 navController = navController,
+                // 실제 웹뷰 로드 URL = "/postdetail?id=postId"
                 path = "${AllDestination.PostDetail.webPath}?id=$postId",
                 authViewModel = authViewModel,
                 isShowBottomBar = false
@@ -119,7 +129,7 @@ fun MyApp(authViewModel: AuthViewModel, modifier: Modifier = Modifier) {
         }
 
         composable(
-            route = AllDestination.CouncilNoticeDetail.routePattern,
+            route = "councilNoticeDetail/{noticeId}",
             arguments = listOf(navArgument("noticeId") { type = NavType.StringType })
         ) { backStackEntry ->
             val noticeId = backStackEntry.arguments?.getString("noticeId") ?: ""
@@ -132,7 +142,7 @@ fun MyApp(authViewModel: AuthViewModel, modifier: Modifier = Modifier) {
         }
 
         composable(
-            route = AllDestination.PetitionDetail.routePattern,
+            route = "petitionDetail/{petitionId}",
             arguments = listOf(navArgument("petitionId") { type = NavType.StringType })
         ) { backStackEntry ->
             val petitionId = backStackEntry.arguments?.getString("petitionId") ?: ""
@@ -145,3 +155,22 @@ fun MyApp(authViewModel: AuthViewModel, modifier: Modifier = Modifier) {
         }
     }
 }
+
+///**
+// * 네비게이션 목적지 변경 시 스택을 업데이트하는 함수
+// */
+//private fun handleDestinationChange(stack: MutableList<String>, destination: NavDestination) {
+//    val route = destination.route ?: "unknown"
+//
+//    // 스택에 이미 존재하는 경로라면 해당 경로 이후의 모든 경로를 제거
+//    val existingIndex = stack.indexOf(route)
+//    if (existingIndex != -1) {
+//        // 현재 목적지가 스택에 이미 존재하면 해당 위치 이후를 제거
+//        while (stack.size > existingIndex + 1) {
+//            stack.removeAt(stack.size - 1)
+//        }
+//    } else {
+//        // 새로운 목적지라면 스택에 추가
+//        stack.add(route)
+//    }
+//}
