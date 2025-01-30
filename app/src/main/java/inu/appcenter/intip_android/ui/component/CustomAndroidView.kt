@@ -184,6 +184,7 @@ fun CustomAndroidView(
                                 when (typeParam) {
                                     "book" -> navController.navigate(AllDestination.UtilBook.route)
                                     "lost" -> navController.navigate(AllDestination.UtilLost.route)
+                                    "rental" -> navController.navigate(AllDestination.UtilRentals.route)
                                     else -> navController.navigate(AllDestination.UtilBook.route)
                                 }
                                 return true
