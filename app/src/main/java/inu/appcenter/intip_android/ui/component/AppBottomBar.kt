@@ -1,5 +1,6 @@
 package inu.appcenter.intip_android.ui.component
 
+import AllDestination
 import android.util.Log
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
@@ -31,7 +32,6 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import inu.appcenter.intip_android.R
-import inu.appcenter.intip_android.ui.navigate.AllDestination
 import inu.appcenter.intip_android.ui.theme.Blue_9CAFE2
 import inu.appcenter.intip_android.ui.theme.Gray_D6D1D5
 import inu.appcenter.intip_android.ui.theme.INTIPTheme
@@ -99,14 +99,10 @@ fun AppBottomBar(
                     if (navController.currentDestination?.route != screen.route) {
                         Log.d("AppBottomBar", "Navigating to: ${screen.route}")
                         navController.navigate(screen.route) {
-                            // Home을 스택의 시작점으로 유지
-                            popUpTo(AllDestination.Home.route) {
-                                // Home으로 가는 경우가 아니면 Home은 스택에 유지
-                                inclusive = (screen.route == AllDestination.Home.route)
-                            }
-                            // 중복 방지
+                             popUpTo(AllDestination.Home.route) {
+                                 inclusive = (screen.route == AllDestination.Home.route)
+                             }
                             launchSingleTop = true
-                            // 같은 화면으로 이동할 때 애니메이션 방지
                             restoreState = true
                         }
                     }

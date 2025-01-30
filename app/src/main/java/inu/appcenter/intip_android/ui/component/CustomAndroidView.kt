@@ -1,5 +1,6 @@
 package inu.appcenter.intip_android.ui.component
 
+import AllDestination
 import android.app.Activity
 import android.content.Intent
 import android.net.Uri
@@ -11,7 +12,6 @@ import android.webkit.ConsoleMessage
 import android.webkit.JavascriptInterface
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
-import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.compose.BackHandler
@@ -25,7 +25,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.navigation.NavController
 import inu.appcenter.intip_android.ui.login.AuthViewModel
-import inu.appcenter.intip_android.ui.navigate.AllDestination
 import java.io.UnsupportedEncodingException
 
 @Composable
@@ -62,7 +61,7 @@ fun CustomAndroidView(
         }
 
         // council 페이지의 경우 기본 type=notice 추가
-        if (path == "/home/council" && !baseUri.getQueryParameter("type").isNullOrEmpty()) {
+        if (path == "/home/council" && baseUri.getQueryParameter("type").isNullOrEmpty()) {
             urlBuilder.appendQueryParameter("type", "notice")
         }
         // util 페이지의 경우 기본 type=book 추가
@@ -132,6 +131,13 @@ fun CustomAndroidView(
                             rawPath
                         }
 
+                        // 로그인 페이지 처리 추가
+                        if (cleanedPath == "/login") {
+                            Log.d("CustomWebView", "로그인 페이지 이동")
+                            navController.navigate(AllDestination.Login.route)
+                            return true
+                        }
+
                         val queryId = uri.getQueryParameter("id")
                         val typeParam = uri.getQueryParameter("type")
 
@@ -185,36 +191,41 @@ fun CustomAndroidView(
                         }
 
                         // [CASE A] 동적 라우트에 해당하는지 확인 (ex: /postdetail)
-                        if (dynamicRoutesMap.containsKey(cleanedPath)) {
-                            val destination = dynamicRoutesMap[cleanedPath]!!
+                        val dynamicDestination = dynamicRoutesMap[cleanedPath]
+                        if (dynamicDestination != null) {
                             if (queryId.isNullOrEmpty()) {
                                 Log.w("CustomWebView", "동적 라우트인데 id가 없음 → 웹뷰로 처리")
                                 return super.shouldOverrideUrlLoading(view, request)
                             }
                             // ex) /postdetail -> PostDetail
-                            when (destination) {
+                            when (dynamicDestination) {
                                 is AllDestination.PostDetail -> {
-                                    navController.navigate(destination.createRoute(queryId))
+                                    navController.navigate(dynamicDestination.createRoute(queryId))
                                 }
                                 is AllDestination.CouncilNoticeDetail -> {
-                                    navController.navigate(destination.createRoute(queryId))
+                                    navController.navigate(dynamicDestination.createRoute(queryId))
                                 }
                                 is AllDestination.PetitionDetail -> {
-                                    navController.navigate(destination.createRoute(queryId))
+                                    navController.navigate(dynamicDestination.createRoute(queryId))
                                 }
                                 else -> {
-                                    Log.w("CustomWebView", "Unknown dynamic destination: $destination")
+                                    Log.w("CustomWebView", "Unknown dynamic destination: $dynamicDestination")
                                 }
                             }
                             return true
                         }
 
                         // [CASE B] 정적 라우트
-                        val staticDestination = AllDestination.webViewPage.find { it.webPath == cleanedPath }
+                        val staticDestination = AllDestination.getRoute(cleanedPath.removePrefix("/"))
                         if (staticDestination != null) {
-                            // ex) /home/tips?type=notice → tips 페이지 이동
-                            navController.navigate(staticDestination.route)
-                            Log.d("CustomWebView", "정적 라우트 이동 -> ${staticDestination.route}")
+                            val currentRoute = navController.currentBackStackEntry?.destination?.route
+                            if (staticDestination.route != currentRoute) {
+                                navController.navigate(staticDestination.route) {
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                                Log.d("CustomWebView", "정적 라우트 이동 -> ${staticDestination.route}")
+                            }
                             return true
                         }
 
@@ -270,12 +281,15 @@ class AndroidBridge(
     }
 
     @JavascriptInterface
-        fun handleLogout() {
+    fun handleLogout() {
         Handler(Looper.getMainLooper()).post {
             authViewModel.logout()
-            // 로그인 화면으로 이동하고 백스택 클리어
-            navController.navigate("login") {
-                popUpTo(0) { inclusive = true }
+            navController.navigate(AllDestination.Home.route) {
+                popUpTo(AllDestination.Home.route) {
+                    inclusive = true
+                }
+                launchSingleTop = true
+                restoreState = true
             }
         }
     }
@@ -287,4 +301,3 @@ private val dynamicRoutesMap: Map<String, AllDestination> = mapOf(
     "/petitiondetail" to AllDestination.PetitionDetail
     // 필요 시 더 추가
 )
-
