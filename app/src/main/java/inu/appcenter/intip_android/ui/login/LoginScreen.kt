@@ -129,7 +129,6 @@ fun LoginScreen(
 
         LoginButton(
             onClick = {
-                Log.d("LoginButton", "login() 호출 직전")
                 authViewModel.login(
                     LoginDto(
                         studentId = authUiState.loginId,
