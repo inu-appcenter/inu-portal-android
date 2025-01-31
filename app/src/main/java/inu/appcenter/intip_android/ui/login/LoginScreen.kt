@@ -164,5 +164,10 @@ fun LoginScreen(
                 CircularProgressIndicator()
             }
         }
+
+
+        if(authUiState.loginState is AuthState.Error) {
+            Text(text = "로그인 실패")
+        }
     }
 }
