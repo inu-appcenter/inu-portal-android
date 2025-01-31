@@ -7,11 +7,16 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -46,6 +51,7 @@ fun LoginScreen(
         authViewModel.resetState()
     }
 
+    val scrollState = rememberScrollState()
     val authUiState by authViewModel.uiState.collectAsState()
     val context = LocalContext.current
     var passwordVisible by remember { mutableStateOf(false) }
@@ -79,9 +85,11 @@ fun LoginScreen(
 
     Column(
         modifier = Modifier
+            .verticalScroll(scrollState)
+            .padding(WindowInsets.ime.asPaddingValues())
             .fillMaxSize()
             .padding(32.dp),
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.Center,
     ) {
         //가로 304 세로 141.6
         AsyncImage(
