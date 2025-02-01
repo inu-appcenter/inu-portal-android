@@ -5,17 +5,18 @@ import android.util.Log
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import inu.appcenter.intip_android.ui.utils.K
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 class DataStoreManager(private val context: Context) {
 
     companion object {
-        private val Context.dataStore by preferencesDataStore("user_prefs")
-        val ACCESS_TOKEN_KEY = stringPreferencesKey("access_token_key")
-        val ACCESS_TOKEN_EXPIRED_TIME_KEY = stringPreferencesKey("access_token_expired_time_key")
-        val REFRESH_TOKEN_KEY = stringPreferencesKey("refresh_token_key")
-        val REFRESH_TOKEN_EXPIRED_TIME_KEY = stringPreferencesKey("refresh_token_expired_time_key")
+        private val Context.dataStore by preferencesDataStore(K.DATASTORE_NAME)
+        val ACCESS_TOKEN_KEY = stringPreferencesKey(K.ACCESS_TOKEN)
+        val ACCESS_TOKEN_EXPIRED_TIME_KEY = stringPreferencesKey(K.ACCESS_TOKEN_EXPIRED_TIME)
+        val REFRESH_TOKEN_KEY = stringPreferencesKey(K.REFRESH_TOKEN)
+        val REFRESH_TOKEN_EXPIRED_TIME_KEY = stringPreferencesKey(K.REFRESH_TOKEN_EXPIRED_TIME)
     }
 
     val accessToken: Flow<String?> = context.dataStore.data

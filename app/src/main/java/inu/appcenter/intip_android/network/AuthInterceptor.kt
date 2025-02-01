@@ -2,6 +2,7 @@ package inu.appcenter.intip_android.network
 
 import android.util.Log
 import inu.appcenter.intip_android.local.DataStoreManager
+import inu.appcenter.intip_android.ui.utils.K
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
@@ -13,7 +14,7 @@ class AuthInterceptor(private val dataStoreManager: DataStoreManager) : Intercep
         val url = request.url.toString()
 
         // 토큰 갱신 요청을 인터셉트에서 제외합니다.
-        if (url.contains("/api/members/refresh")) {
+        if (url.contains(K.REFRESH)) {
             return chain.proceed(request)
         }
 

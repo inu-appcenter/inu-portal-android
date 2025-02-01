@@ -1,4 +1,4 @@
-package inu.appcenter.intip_android.ui.login.util
+package inu.appcenter.intip_android.ui.login.component
 
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.text.BasicText
@@ -15,6 +15,7 @@ import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
+import inu.appcenter.intip_android.ui.utils.K
 
 @Composable
 fun AgreementText(
@@ -28,7 +29,7 @@ fun AgreementText(
         // 이용약관 링크
         pushStringAnnotation(
             tag = "URL",
-            annotation = "https://intip.inuappcenter.kr/terms-of-use.html"
+            annotation = K.TERMS_OF_USE_URL
         )
         withStyle(
             style = SpanStyle(color = Color.Blue, textDecoration = TextDecoration.Underline)
@@ -42,7 +43,7 @@ fun AgreementText(
         // 개인정보 처리지침 링크
         pushStringAnnotation(
             tag = "URL",
-            annotation = "https://intip.inuappcenter.kr/privacy-policy.html"
+            annotation = K.PRIVACY_POLICY_URL
         )
         withStyle(
             style = SpanStyle(color = Color.Magenta, textDecoration = TextDecoration.Underline)

@@ -39,5 +39,3 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-//"https://intip.inuappcenter.kr/app/home"
-

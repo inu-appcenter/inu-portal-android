@@ -5,7 +5,6 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavType
@@ -13,10 +12,11 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import inu.appcenter.intip_android.ui.component.SplashScreen
+import inu.appcenter.intip_android.ui.screen.SplashScreen
 import inu.appcenter.intip_android.ui.login.AuthViewModel
 import inu.appcenter.intip_android.ui.login.LoginScreen
 import inu.appcenter.intip_android.ui.screen.WebViewScreen
+import inu.appcenter.intip_android.ui.utils.K
 
 @Composable
 fun MyApp(authViewModel: AuthViewModel, modifier: Modifier = Modifier) {
@@ -77,12 +77,7 @@ fun MyApp(authViewModel: AuthViewModel, modifier: Modifier = Modifier) {
                     navController = navController,
                     path = destination.webPath,
                     authViewModel = authViewModel,
-                    isShowBottomBar = destination in listOf(
-                        AllDestination.Home,
-                        AllDestination.Write,
-                        AllDestination.Save,
-                        AllDestination.MyPage
-                    )
+                    isShowBottomBar = destination in K.BOTTOM_BAR_DESTINATIONS
                 )
             }
         }

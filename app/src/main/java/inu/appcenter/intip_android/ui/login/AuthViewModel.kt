@@ -3,22 +3,19 @@ package inu.appcenter.intip_android.ui.login
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.gson.Gson
 import inu.appcenter.intip_android.local.DataStoreManager
 import inu.appcenter.intip_android.model.member.LoginDto
 import inu.appcenter.intip_android.repository.member.MemberRepository
+import inu.appcenter.intip_android.ui.utils.K
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.time.format.DateTimeParseException
-
-private const val UNKNOWN_ERROR = "Unknown error"
 
 sealed class AuthState {
     object Idle : AuthState()
@@ -184,7 +181,7 @@ class AuthViewModel(
             } catch (e: Exception) {
                 Log.e("login", e.message ?: "error")
                 _uiState.update {
-                    it.copy(loginState = AuthState.Error(e.message ?: UNKNOWN_ERROR))
+                    it.copy(loginState = AuthState.Error(e.message ?: K.UNKNOWN_ERROR_MESSAGE))
                 }
             }
         }
@@ -204,7 +201,7 @@ class AuthViewModel(
             } catch (e: Exception) {
                 _uiState.update {
                     it.copy(
-                        logoutState = AuthState.Error(e.message ?: UNKNOWN_ERROR)
+                        logoutState = AuthState.Error(e.message ?: K.UNKNOWN_ERROR_MESSAGE)
                     )
                 }
             }

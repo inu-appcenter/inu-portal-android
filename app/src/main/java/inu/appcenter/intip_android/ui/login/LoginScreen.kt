@@ -2,7 +2,6 @@ package inu.appcenter.intip_android.ui.login
 
 import android.content.Intent
 import android.net.Uri
-import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -37,9 +36,10 @@ import coil.decode.SvgDecoder
 import coil.request.CachePolicy
 import inu.appcenter.intip_android.R
 import inu.appcenter.intip_android.model.member.LoginDto
-import inu.appcenter.intip_android.ui.login.util.AgreementText
-import inu.appcenter.intip_android.ui.login.util.LoginButton
-import inu.appcenter.intip_android.ui.login.util.LoginPageTextField
+import inu.appcenter.intip_android.ui.login.component.AgreementText
+import inu.appcenter.intip_android.ui.login.component.LoginButton
+import inu.appcenter.intip_android.ui.login.component.LoginPageTextField
+import inu.appcenter.intip_android.ui.utils.K
 
 @Composable
 fun LoginScreen(
@@ -93,7 +93,7 @@ fun LoginScreen(
     ) {
         //가로 304 세로 141.6
         AsyncImage(
-            model = "https://intip.inuappcenter.kr/assets/logo-with-text-FfH8Z-gk.svg",
+            model = K.LOGO_IMAGE_URL,
             contentDescription = "INTIP Logo",
             imageLoader = imageLoader,
             modifier = Modifier

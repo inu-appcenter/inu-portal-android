@@ -1,5 +1,6 @@
 package inu.appcenter.intip_android.ui.component
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
 import android.net.Uri
@@ -25,8 +26,10 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.navigation.NavController
 import inu.appcenter.intip_android.ui.login.AuthViewModel
 import inu.appcenter.intip_android.ui.navigate.AllDestination
+import inu.appcenter.intip_android.ui.utils.K
 import java.io.UnsupportedEncodingException
 
+@SuppressLint("SetJavaScriptEnabled")
 @Composable
 fun CustomAndroidView(
     modifier: Modifier = Modifier,
@@ -36,7 +39,7 @@ fun CustomAndroidView(
     authViewModel: AuthViewModel
 ) {
     val context = LocalContext.current
-    val WEB_BASE_URL = "https://intip.inuappcenter.kr/app"
+    val webBaseUrl = K.WEB_BASE_URL
 
     // Handle back press for WebView
     BackHandler {
@@ -52,7 +55,7 @@ fun CustomAndroidView(
 
     // URL과 쿼리 파라미터 처리
     val url = try {
-        val baseUri = Uri.parse("$WEB_BASE_URL$path")
+        val baseUri = Uri.parse("$webBaseUrl$path")
         val urlBuilder = baseUri.buildUpon()
 
         // 토큰이 있다면 추가
@@ -75,7 +78,7 @@ fun CustomAndroidView(
         urlBuilder.toString()
     } catch (e: UnsupportedEncodingException) {
         Log.e("CustomAndroidView", "URL 인코딩 에러: ${e.message}")
-        "$WEB_BASE_URL$path"
+        "$webBaseUrl$path"
     }
 
     // WebView 인스턴스 생성 (remember로 구성 생명주기 내에서 유지)

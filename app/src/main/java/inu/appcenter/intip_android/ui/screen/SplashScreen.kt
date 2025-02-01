@@ -1,4 +1,4 @@
-package inu.appcenter.intip_android.ui.component
+package inu.appcenter.intip_android.ui.screen
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -14,6 +14,7 @@ import coil.ImageLoader
 import coil.compose.AsyncImage
 import coil.decode.SvgDecoder
 import inu.appcenter.intip_android.ui.navigate.AllDestination
+import inu.appcenter.intip_android.ui.utils.K
 import kotlinx.coroutines.delay
 
 @Composable
@@ -27,7 +28,7 @@ fun SplashScreen(navController: NavController) {
 
     // 스플래시 화면에서 일정 시간 대기 후 홈 화면으로 네비게이션
     LaunchedEffect(key1 = true) {
-        delay(2000) // 2초 대기 (필요에 따라 조정)
+        delay(K.SPLASH_DELAY) // 2초 대기 (필요에 따라 조정)
         navController.navigate(AllDestination.Home.route) {
             popUpTo(AllDestination.Splash.route) { inclusive = true }
         }
@@ -40,7 +41,7 @@ fun SplashScreen(navController: NavController) {
     ) {
         // SVG 로고 이미지 로드 및 표시
         AsyncImage(
-            model = "https://intip.inuappcenter.kr/assets/logo-with-text-FfH8Z-gk.svg",
+            model = K.LOGO_IMAGE_URL,
             contentDescription = "Splash Logo",
             imageLoader = imageLoader,
             contentScale = ContentScale.Fit,

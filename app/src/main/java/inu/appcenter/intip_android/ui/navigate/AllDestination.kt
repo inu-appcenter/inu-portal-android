@@ -23,7 +23,7 @@ sealed class AllDestination(val route: String, val label: String, val webPath: S
         )
     }
 
-    // (정적) 웹뷰 경로 예시
+    // 정적 웹뷰 경로 예시
     data object Home : AllDestination("home", "Home", "/home")
     data object Menu : AllDestination("menu", "메뉴", "/home/menu")
     data object Calendar : AllDestination("calendar", "일정", "/home/calendar")
@@ -60,7 +60,7 @@ sealed class AllDestination(val route: String, val label: String, val webPath: S
     // Write 관련 라우트
     data object Write : AllDestination("write", "Write", "/write")
 
-    // (동적) 웹뷰 경로 예시
+    // 동적 웹뷰 경로 예시
     data object TipsSearch : AllDestination("tips_search", "Tips 검색", "/home/tips") {
         fun createRoute(searchQuery: String): String = "$route?search=$searchQuery"
         const val routePattern = "tips_search?search={search}"
