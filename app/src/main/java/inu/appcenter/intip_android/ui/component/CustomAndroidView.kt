@@ -68,7 +68,10 @@ fun CustomAndroidView(
         if (path == "/home/util" && baseUri.getQueryParameter("type").isNullOrEmpty()) {
             urlBuilder.appendQueryParameter("type", "book")
         }
-
+        // campus 페이지의 경우 기본 type=campusmap 추가
+        if (path == "/home/campus" && baseUri.getQueryParameter("type").isNullOrEmpty()) {
+            urlBuilder.appendQueryParameter("type", "campusmap")
+        }
         urlBuilder.toString()
     } catch (e: UnsupportedEncodingException) {
         Log.e("CustomAndroidView", "URL 인코딩 에러: ${e.message}")
@@ -175,8 +178,15 @@ fun CustomAndroidView(
                                 when (typeParam) {
                                     "notice" -> navController.navigate(AllDestination.CouncilNotice.route)
                                     "petition" -> navController.navigate(AllDestination.CouncilPetition.route)
-                                    "HelloBus" -> navController.navigate(AllDestination.CouncilHelloBus.route)
                                     else -> navController.navigate(AllDestination.CouncilNotice.route)
+                                }
+                                return true
+                            }
+                            "/home/campus" -> {
+                                when (typeParam) {
+                                    "campusmap" -> navController.navigate(AllDestination.CampusMap.route)
+                                    "HelloBus" -> navController.navigate(AllDestination.CampusHelloBus.route)
+                                    else -> navController.navigate(AllDestination.CampusMap.route)
                                 }
                                 return true
                             }
