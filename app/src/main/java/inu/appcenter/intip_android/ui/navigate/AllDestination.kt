@@ -7,7 +7,7 @@ sealed class AllDestination(val route: String, val label: String, val webPath: S
             Tips, TipsNotice,  // Tips 관련 페이지들
             Menu,
             Calendar,
-            Map,
+            Campus,
             Util, UtilBook, UtilLost, UtilRentals,  // Util 관련 페이지들
             Council, CouncilNotice, CouncilPetition, CouncilHelloBus,  // Council 관련 페이지들
             Club,
@@ -27,7 +27,6 @@ sealed class AllDestination(val route: String, val label: String, val webPath: S
     data object Home : AllDestination("home", "Home", "/home")
     data object Menu : AllDestination("menu", "메뉴", "/home/menu")
     data object Calendar : AllDestination("calendar", "일정", "/home/calendar")
-    data object Map : AllDestination("map", "지도", "/home/map")
     data object Club : AllDestination("club", "동아리", "/home/club")
     data object Rental : AllDestination("rental", "대여", "/rental")
     data object Save : AllDestination("save", "Save", "/save")
@@ -54,6 +53,8 @@ sealed class AllDestination(val route: String, val label: String, val webPath: S
     data object CouncilNotice : AllDestination("council_notice", "총학공지", "/home/council?type=notice")
     data object CouncilPetition : AllDestination("council_petition", "청원", "/home/council?type=petition")
     data object CouncilHelloBus : AllDestination("council_hellobus", "헬로버스", "/home/council?type=HelloBus")
+    // Campus 관련 라우트
+    data object Campus : AllDestination("campus", "캠퍼스", "/home/campus")
 
     // Write 관련 라우트
     data object Write : AllDestination("write", "Write", "/write")
