@@ -14,7 +14,7 @@ import coil.ImageLoader
 import coil.compose.AsyncImage
 import coil.decode.SvgDecoder
 import inu.appcenter.intip_android.ui.navigate.AllDestination
-import inu.appcenter.intip_android.ui.utils.K
+import inu.appcenter.intip_android.utils.K
 import kotlinx.coroutines.delay
 
 @Composable

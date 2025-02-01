@@ -2,7 +2,7 @@ package inu.appcenter.intip_android.network
 
 import android.util.Log
 import inu.appcenter.intip_android.local.DataStoreManager
-import inu.appcenter.intip_android.ui.utils.K
+import inu.appcenter.intip_android.utils.K
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor

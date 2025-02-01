@@ -15,7 +15,7 @@ import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
-import inu.appcenter.intip_android.ui.utils.K
+import inu.appcenter.intip_android.utils.K
 
 @Composable
 fun AgreementText(

@@ -39,7 +39,7 @@ import inu.appcenter.intip_android.model.member.LoginDto
 import inu.appcenter.intip_android.ui.login.component.AgreementText
 import inu.appcenter.intip_android.ui.login.component.LoginButton
 import inu.appcenter.intip_android.ui.login.component.LoginPageTextField
-import inu.appcenter.intip_android.ui.utils.K
+import inu.appcenter.intip_android.utils.K
 
 @Composable
 fun LoginScreen(

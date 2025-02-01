@@ -1,4 +1,4 @@
-package inu.appcenter.intip_android.ui.utils
+package inu.appcenter.intip_android.utils
 
 import androidx.compose.ui.unit.dp
 import inu.appcenter.intip_android.ui.navigate.AllDestination

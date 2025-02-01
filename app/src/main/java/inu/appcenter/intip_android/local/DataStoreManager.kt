@@ -5,7 +5,7 @@ import android.util.Log
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
-import inu.appcenter.intip_android.ui.utils.K
+import inu.appcenter.intip_android.utils.K
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 

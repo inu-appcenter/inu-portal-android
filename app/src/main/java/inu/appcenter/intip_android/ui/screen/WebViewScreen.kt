@@ -15,7 +15,7 @@ import androidx.navigation.NavHostController
 import inu.appcenter.intip_android.ui.component.AppBottomBar
 import inu.appcenter.intip_android.ui.component.CustomAndroidView
 import inu.appcenter.intip_android.ui.login.AuthViewModel
-import inu.appcenter.intip_android.ui.utils.K
+import inu.appcenter.intip_android.utils.K
 
 @Composable
 fun WebViewScreen(

@@ -16,7 +16,7 @@ import inu.appcenter.intip_android.ui.screen.SplashScreen
 import inu.appcenter.intip_android.ui.login.AuthViewModel
 import inu.appcenter.intip_android.ui.login.LoginScreen
 import inu.appcenter.intip_android.ui.screen.WebViewScreen
-import inu.appcenter.intip_android.ui.utils.K
+import inu.appcenter.intip_android.utils.K
 
 @Composable
 fun MyApp(authViewModel: AuthViewModel, modifier: Modifier = Modifier) {

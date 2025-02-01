@@ -2,7 +2,7 @@ package inu.appcenter.intip_android.network
 
 import inu.appcenter.intip_android.model.member.LoginDto
 import inu.appcenter.intip_android.model.member.LoginResponse
-import inu.appcenter.intip_android.ui.utils.K
+import inu.appcenter.intip_android.utils.K
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.Header

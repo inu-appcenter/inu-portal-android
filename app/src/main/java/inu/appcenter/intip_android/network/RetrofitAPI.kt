@@ -3,7 +3,7 @@ package inu.appcenter.intip_android.network
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import inu.appcenter.intip_android.local.DataStoreManager
-import inu.appcenter.intip_android.ui.utils.K
+import inu.appcenter.intip_android.utils.K
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import org.koin.core.component.KoinComponent
