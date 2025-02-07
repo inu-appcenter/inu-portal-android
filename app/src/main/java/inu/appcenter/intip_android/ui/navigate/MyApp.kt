@@ -3,8 +3,6 @@ package inu.appcenter.intip_android.ui.navigate
 import android.app.Activity
 import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavType
@@ -12,16 +10,15 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import inu.appcenter.intip_android.ui.screen.SplashScreen
 import inu.appcenter.intip_android.ui.login.AuthViewModel
 import inu.appcenter.intip_android.ui.login.LoginScreen
+import inu.appcenter.intip_android.ui.screen.SplashScreen
 import inu.appcenter.intip_android.ui.screen.WebViewScreen
 import inu.appcenter.intip_android.utils.K
 
 @Composable
 fun MyApp(authViewModel: AuthViewModel, modifier: Modifier = Modifier) {
     val navController = rememberNavController()
-    val uiState by authViewModel.uiState.collectAsState()
     val context = LocalContext.current
 
     // 뒤로가기 처리 - Home에서만 앱 종료

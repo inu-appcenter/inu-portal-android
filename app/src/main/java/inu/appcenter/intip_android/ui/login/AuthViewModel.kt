@@ -41,9 +41,6 @@ class AuthViewModel(
     private val _uiState = MutableStateFlow(AuthUiState())
     val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
 
-    // tokenFlow를 외부에 공개합니다.
-    val tokenFlow = dataStoreManager.accessToken
-
     init {
         observeToken()
 
@@ -123,9 +120,8 @@ class AuthViewModel(
             return true
         }
 
-        return false;
+        return false
     }
-
     /**
      * 로그인 함수
      * 1. 우선 DataStore에 저장된 accessToken과 accessTokenExpiredTime을 확인합니다.
