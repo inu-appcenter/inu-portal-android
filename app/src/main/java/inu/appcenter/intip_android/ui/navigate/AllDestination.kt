@@ -3,6 +3,7 @@ package inu.appcenter.intip_android.ui.navigate
 sealed class AllDestination(val route: String, val label: String, val webPath: String) {
     companion object {
         val webViewPage = listOf(
+            Ai,
             Home,
             Tips, TipsNotice,  // Tips 관련 페이지들
             Menu,
@@ -24,6 +25,7 @@ sealed class AllDestination(val route: String, val label: String, val webPath: S
     }
 
     // 정적 웹뷰 경로 예시
+    data object Ai : AllDestination("ai", "인공지능", "/ai")
     data object Home : AllDestination("home", "Home", "/home")
     data object Menu : AllDestination("menu", "메뉴", "/home/menu")
     data object Calendar : AllDestination("calendar", "일정", "/home/calendar")
