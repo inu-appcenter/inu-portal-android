@@ -30,7 +30,8 @@ data class AuthUiState(
     val loginId: String = "",
     val loginPw: String = "",
     val hasToken: Boolean? = null,
-    val token: String? = null
+    val token: String? = null,
+    val hasShownTokenAlert: Boolean = false  // 토큰 알림 표시 여부
 )
 
 class AuthViewModel(
@@ -72,6 +73,10 @@ class AuthViewModel(
 
     fun setLoginPw(loginPw: String) {
         _uiState.update { it.copy(loginPw = loginPw) }
+    }
+
+    fun setTokenAlertShown() {
+        _uiState.update { it.copy(hasShownTokenAlert = true) }
     }
 
 
@@ -211,7 +216,8 @@ class AuthViewModel(
                 logoutState = AuthState.Idle,
                 loginId = "",
                 loginPw = "",
-                token = null
+                token = null,
+                hasShownTokenAlert = false
             )
         }
     }

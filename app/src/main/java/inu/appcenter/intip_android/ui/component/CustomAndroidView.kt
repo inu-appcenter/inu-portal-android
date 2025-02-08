@@ -106,6 +106,20 @@ fun CustomAndroidView(
 
             webChromeClient = object : WebChromeClient() {
                 override fun onConsoleMessage(consoleMessage: ConsoleMessage): Boolean {
+                    val message = consoleMessage.message()
+
+                    // 토큰 관련 메시지인지 확인
+                    if (message.contains("회원 가져오기 실패")) {
+                        // 아직 알림을 보여주지 않았을 때만 처리
+                        if (!authViewModel.uiState.value.hasShownTokenAlert) {
+                            // 알림을 표시했다고 표시
+                            authViewModel.setTokenAlertShown()
+                        }
+                        // 토큰 관련 메시지는 콘솔에 표시하지 않음
+                        return true
+                    }
+
+                    // 다른 콘솔 메시지는 정상적으로 표시
                     Log.d(
                         "WebViewConsole",
                         "[${consoleMessage.messageLevel()}] " +
