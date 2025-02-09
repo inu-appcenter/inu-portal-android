@@ -2,18 +2,29 @@ package inu.appcenter.intip_android.ui.component
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.app.DownloadManager
+import android.content.ContentValues
+import android.content.Context
 import android.content.Intent
+import android.media.MediaScannerConnection
 import android.net.Uri
+import android.os.Build
+import android.os.Environment
 import android.os.Handler
 import android.os.Looper
+import android.provider.MediaStore
+import android.util.Base64
 import android.util.Log
 import android.view.ViewGroup
 import android.webkit.JavascriptInterface
 import android.webkit.JsResult
+import android.webkit.MimeTypeMap
+import android.webkit.URLUtil
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -27,6 +38,7 @@ import androidx.navigation.NavController
 import inu.appcenter.intip_android.ui.login.AuthViewModel
 import inu.appcenter.intip_android.ui.navigate.AllDestination
 import inu.appcenter.intip_android.utils.K
+import java.io.File
 import java.io.UnsupportedEncodingException
 
 @SuppressLint("SetJavaScriptEnabled")
@@ -100,6 +112,96 @@ fun CustomAndroidView(
                 setSupportZoom(false)
                 displayZoomControls = false
             }
+
+            setDownloadListener { url, userAgent, contentDisposition, mimeType, contentLength ->
+                Log.d("DownloadListener", "Download URL: $url")
+                if (url.startsWith("data:")) {
+                    // data URI인 경우 직접 파일 저장
+                    try {
+                        // data URI 형식: data:[<mediatype>][;base64],<data>
+                        val commaIndex = url.indexOf(',')
+                        if (commaIndex == -1) {
+                            Log.e("DownloadListener", "잘못된 data URI")
+                            return@setDownloadListener
+                        }
+                        val meta = url.substring(5, commaIndex) // "data:" 이후부터 콤마 전까지
+                        val dataString = url.substring(commaIndex + 1)
+                        val isBase64 = meta.endsWith(";base64")
+                        val fileData: ByteArray = if (isBase64) {
+                            Base64.decode(dataString, Base64.DEFAULT)
+                        } else {
+                            dataString.toByteArray(Charsets.UTF_8)
+                        }
+
+                        // MIME 타입과 확장자 추출
+                        val actualMimeType = meta.split(";").firstOrNull() ?: "application/octet-stream"
+                        val extension = MimeTypeMap.getSingleton()
+                            .getExtensionFromMimeType(actualMimeType) ?: "bin"
+                        val fileName = URLUtil.guessFileName(url, contentDisposition, actualMimeType)
+                            .ifBlank { "downloaded_file.$extension" }
+
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                            // Android Q 이상: MediaStore API를 사용하여 Pictures 폴더에 저장 (갤러리 자동 등록)
+                            val values = ContentValues().apply {
+                                put(MediaStore.Images.Media.DISPLAY_NAME, fileName)
+                                put(MediaStore.Images.Media.MIME_TYPE, actualMimeType)
+                                put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES)
+                            }
+                            val uri = context.contentResolver.insert(
+                                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                                values
+                            )
+                            if (uri != null) {
+                                context.contentResolver.openOutputStream(uri).use { output ->
+                                    output?.write(fileData)
+                                }
+                                Toast.makeText(
+                                    context,
+                                    "갤러리에 저장되었습니다: $fileName",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                            } else {
+                                Toast.makeText(context, "갤러리 저장 실패", Toast.LENGTH_SHORT).show()
+                            }
+                        } else {
+                            // Android 9(API 28) 이하: Downloads 폴더에 저장 후 MediaScannerConnection.scanFile() 호출
+                            val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+                            val file = File(downloadsDir, fileName)
+                            file.outputStream().use { output ->
+                                output.write(fileData)
+                            }
+                            MediaScannerConnection.scanFile(
+                                context,
+                                arrayOf(file.absolutePath),
+                                arrayOf(actualMimeType)
+                            ) { path, uri ->
+                                Log.d("MediaScanner", "Scanned $path : $uri")
+                            }
+                            Toast.makeText(
+                                context,
+                                "파일이 다운로드되었습니다: ${file.absolutePath}",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+                    } catch (e: Exception) {
+                        Log.e("DownloadListener", "data URI 파일 저장 실패: ${e.message}")
+                        Toast.makeText(context, "파일 다운로드 실패", Toast.LENGTH_SHORT).show()
+                    }
+                } else {
+                    // HTTP/HTTPS URL인 경우 DownloadManager를 사용
+                    val downloadManager = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+                    val fileName = URLUtil.guessFileName(url, contentDisposition, mimeType)
+                    val request = DownloadManager.Request(Uri.parse(url)).apply {
+                        addRequestHeader("User-Agent", userAgent)
+                        setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+                        setTitle(fileName)
+                        setDescription("다운로드 중...")
+                        setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName)
+                    }
+                    downloadManager.enqueue(request)
+                }
+            }
+
 
             // JavaScript Interface 추가
             addJavascriptInterface(AndroidBridge(navController, authViewModel), "AndroidBridge")
@@ -211,8 +313,6 @@ fun CustomAndroidView(
                             }
                         }
 
-
-
                         // [CASE A] 동적 라우트에 해당하는지 확인 (ex: /postdetail)
                         val dynamicDestination = dynamicRoutesMap[cleanedPath]
                         if (dynamicDestination != null) {
@@ -220,7 +320,6 @@ fun CustomAndroidView(
                                 Log.w("CustomWebView", "동적 라우트인데 id가 없음 → 웹뷰로 처리")
                                 return super.shouldOverrideUrlLoading(view, request)
                             }
-                            // ex) /postdetail -> PostDetail
                             when (dynamicDestination) {
                                 is AllDestination.PostDetail -> {
                                     navController.navigate(dynamicDestination.createRoute(queryId))
@@ -257,7 +356,6 @@ fun CustomAndroidView(
                             navController.navigate(it.route)
                         }
 
-                        // [CASE C] 매핑되지 않은 path
                         Log.d("CustomWebView", "매핑되지 않은 path -> 웹뷰에서 처리: $cleanedPath")
                         return super.shouldOverrideUrlLoading(view, request)
                     }
@@ -266,7 +364,7 @@ fun CustomAndroidView(
 
                 override fun onPageFinished(view: WebView?, url: String?) {
                     super.onPageFinished(view, url)
-                    Log.d("CustomWebView", "onPageFinished: $url")
+                    Log.d("CustomAndroidView", "onPageFinished: $url")
                     // 토큰이 있으면 웹 localStorage에 주입 (JS로 localStorage.setItem)
                     token?.let {
                         view?.evaluateJavascript(
@@ -293,6 +391,7 @@ fun CustomAndroidView(
         }
     )
 }
+
 
 /**
  * JavaScript와 네이티브 간의 브리지를 담당하는 클래스
