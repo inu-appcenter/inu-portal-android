@@ -10,6 +10,7 @@ import android.util.Log
 import android.view.ViewGroup
 import android.webkit.ConsoleMessage
 import android.webkit.JavascriptInterface
+import android.webkit.JsResult
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
@@ -127,6 +128,22 @@ fun CustomAndroidView(
                                 "(line: ${consoleMessage.lineNumber()}, source: ${consoleMessage.sourceId()})"
                     )
                     return super.onConsoleMessage(consoleMessage)
+                }
+                override fun onJsAlert(
+                    view: WebView?,
+                    url: String?,
+                    message: String?,
+                    result: JsResult?
+                ): Boolean {
+                    if (message?.contains("로그인 정보가 만료되었습니다.") == true ||
+                        message?.contains("다시 로그인해 주세요.") == true) {
+                        if (!authViewModel.uiState.value.hasShownTokenAlert) {
+                            authViewModel.setTokenAlertShown()
+                        }
+                        result?.confirm()
+                        return true
+                    }
+                    return super.onJsAlert(view, url, message, result)
                 }
             }
 
