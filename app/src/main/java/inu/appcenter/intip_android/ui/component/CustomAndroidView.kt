@@ -112,7 +112,7 @@ fun CustomAndroidView(
                     result: JsResult?
                 ): Boolean {
                     if (message?.contains("로그인 정보가 만료되었습니다") == true ||
-                        message?.contains("로그인이 필요합니다") == true) {
+                        message?.contains("다시 로그인해 주세요.") == true) {
                         if (!authViewModel.uiState.value.hasShownTokenAlert) {
                             authViewModel.setTokenAlertShown()
                         }
