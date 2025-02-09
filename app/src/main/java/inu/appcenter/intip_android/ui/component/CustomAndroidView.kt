@@ -8,7 +8,6 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.view.ViewGroup
-import android.webkit.ConsoleMessage
 import android.webkit.JavascriptInterface
 import android.webkit.JsResult
 import android.webkit.WebChromeClient
@@ -106,37 +105,14 @@ fun CustomAndroidView(
             addJavascriptInterface(AndroidBridge(navController, authViewModel), "AndroidBridge")
 
             webChromeClient = object : WebChromeClient() {
-                override fun onConsoleMessage(consoleMessage: ConsoleMessage): Boolean {
-                    val message = consoleMessage.message()
-
-                    // 토큰 관련 메시지인지 확인
-                    if (message.contains("회원 가져오기 실패")) {
-                        // 아직 알림을 보여주지 않았을 때만 처리
-                        if (!authViewModel.uiState.value.hasShownTokenAlert) {
-                            // 알림을 표시했다고 표시
-                            authViewModel.setTokenAlertShown()
-                        }
-                        // 토큰 관련 메시지는 콘솔에 표시하지 않음
-                        return true
-                    }
-
-                    // 다른 콘솔 메시지는 정상적으로 표시
-                    Log.d(
-                        "WebViewConsole",
-                        "[${consoleMessage.messageLevel()}] " +
-                                "${consoleMessage.message()} " +
-                                "(line: ${consoleMessage.lineNumber()}, source: ${consoleMessage.sourceId()})"
-                    )
-                    return super.onConsoleMessage(consoleMessage)
-                }
                 override fun onJsAlert(
                     view: WebView?,
                     url: String?,
                     message: String?,
                     result: JsResult?
                 ): Boolean {
-                    if (message?.contains("로그인 정보가 만료되었습니다.") == true ||
-                        message?.contains("다시 로그인해 주세요.") == true) {
+                    if (message?.contains("로그인 정보가 만료되었습니다") == true ||
+                        message?.contains("로그인이 필요합니다") == true) {
                         if (!authViewModel.uiState.value.hasShownTokenAlert) {
                             authViewModel.setTokenAlertShown()
                         }
