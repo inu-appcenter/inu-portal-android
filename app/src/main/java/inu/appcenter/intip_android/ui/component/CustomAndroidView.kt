@@ -113,7 +113,7 @@ fun CustomAndroidView(
                 displayZoomControls = false
             }
 
-            setDownloadListener { url, userAgent, contentDisposition, mimeType, contentLength ->
+            setDownloadListener { url, userAgent, contentDisposition, mimeType, _ ->
                 Log.d("DownloadListener", "Download URL: $url")
                 if (url.startsWith("data:")) {
                     // data URI인 경우 직접 파일 저장
