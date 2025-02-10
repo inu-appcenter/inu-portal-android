@@ -20,30 +20,36 @@ import inu.appcenter.intip_android.ui.theme.Blue_B5C5F2
 @Composable
 fun LoginButton(
     onClick: () -> Unit,
-    text: String
+    text: String,
+    isActive: Boolean   // 학번과 비밀번호가 모두 입력되었는지 여부 전달
 ) {
-    // Figma에서 정의한 색상 값 (70% 불투명도의 색상)
-    // Hex 코드에 투명도 값(B2)이 포함되어 있으므로, 별도로 alpha를 조정할 필요 없이 사용합니다.
-    val gradientColors = listOf(
-        Blue_9CAFE2.copy(alpha = 0.7f), // 시작 색상
-        Blue_B5C5F2.copy(alpha = 0.7f), // 중간 색상
-        Blue_9CAFE2.copy(alpha = 0.7f)  // 마지막 색상
-    )
+    // isActive가 true이면 purple 그라데이션, 아니면 기존 블루 그라데이션 적용
+    val gradientColors = if (isActive) {
+        listOf(
+            Color(0xFF4071B9).copy(alpha = 0.7f),
+            Color(0xFF4071B9).copy(alpha = 0.7f)
+        )
+    } else {
+        listOf(
+            Blue_9CAFE2.copy(alpha = 0.7f),
+            Blue_B5C5F2.copy(alpha = 0.7f),
+            Blue_9CAFE2.copy(alpha = 0.7f)
+        )
+    }
 
     val buttonShape = RoundedCornerShape(15.dp)
 
     Button(
         onClick = onClick,
         shape = buttonShape,
+        enabled = isActive, // 입력이 완료되지 않으면 버튼을 비활성화할 수 있음
         modifier = Modifier
             .fillMaxWidth()
             .height(57.dp)
             .clip(buttonShape)
-            // 버튼 내부 영역에 그라데이션을 적용합니다.
             .background(
                 brush = Brush.linearGradient(colors = gradientColors)
             ),
-        // backgroundColor를 투명하게 하여 Modifier의 배경이 보이도록 합니다.
         colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
     ) {
         Text(

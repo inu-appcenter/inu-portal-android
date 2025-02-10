@@ -58,6 +58,7 @@ fun LoginScreen(
     val authUiState by authViewModel.uiState.collectAsState()
     val context = LocalContext.current
     var passwordVisible by remember { mutableStateOf(false) }
+    val isBothFilled = authUiState.loginId.isNotBlank() && authUiState.loginPw.isNotBlank()
 
     // SVG 디코딩을 위한 ImageLoader 구성
     val imageLoader = ImageLoader.Builder(context)
@@ -138,7 +139,8 @@ fun LoginScreen(
                         )
                     )
                 },
-                text = "로그인"
+                text = "로그인",
+                isActive = isBothFilled
             )
             Spacer(Modifier.height(16.dp))
 
