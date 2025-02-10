@@ -27,6 +27,7 @@ import android.webkit.WebViewClient
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -383,7 +384,9 @@ fun CustomAndroidView(
     }
 
     AndroidView(
-        modifier = modifier.fillMaxSize().padding(),
+        modifier = modifier
+            .fillMaxSize()
+            .imePadding(),
         factory = { webView },
         update = { view ->
             Log.d("WebViewUpdate", "Loading URL: $url")
