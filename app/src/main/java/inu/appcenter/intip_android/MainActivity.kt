@@ -24,7 +24,7 @@ class MainActivity : ComponentActivity() {
 
             val insetsController = WindowCompat.getInsetsController(window, view)
 
-            WindowCompat.setDecorFitsSystemWindows(window, false)
+            WindowCompat.setDecorFitsSystemWindows(window, true)
             insetsController.apply {
                 hide(WindowInsetsCompat.Type.navigationBars())
                 systemBarsBehavior =
