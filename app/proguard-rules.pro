@@ -21,6 +21,10 @@
 #-renamesourcefileattribute SourceFile
 
 -keep class inu.appcenter.intip_android.model.member.** { *; }
+-keep class kr.inuappcenterportal.inuportal.domain.member.dto.** { *; }
 -keepattributes Signature
 -keepattributes *Annotation*
+-keepclassmembers class * {
+    @com.google.gson.annotations.SerializedName <fields>;
+}
 -keep class com.google.gson.** { *; }
