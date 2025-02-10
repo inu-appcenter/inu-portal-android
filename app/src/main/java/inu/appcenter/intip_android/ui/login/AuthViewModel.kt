@@ -181,8 +181,9 @@ class AuthViewModel(
                 }
             } catch (e: Exception) {
                 Log.e("login", e.message ?: "error")
+                val errorMessage = e.message?.let { extractErrorMessage(it) } ?: K.UNKNOWN_ERROR_MESSAGE
                 _uiState.update {
-                    it.copy(loginState = AuthState.Error(e.message ?: K.UNKNOWN_ERROR_MESSAGE))
+                    it.copy(loginState = AuthState.Error(errorMessage))
                 }
             }
         }
@@ -220,5 +221,14 @@ class AuthViewModel(
                 hasShownTokenAlert = false
             )
         }
+    }
+
+    /**
+     * 서버 에러 메시지에서 "msg" 필드의 값만 추출하는 함수
+     */
+    private fun extractErrorMessage(message: String): String {
+        val regex = """"msg"\s*:\s*"([^"]*)"""".toRegex()
+        val matchResult = regex.find(message)
+        return matchResult?.groupValues?.get(1) ?: message
     }
 }

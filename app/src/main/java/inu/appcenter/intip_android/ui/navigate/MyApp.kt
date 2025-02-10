@@ -62,7 +62,6 @@ fun MyApp(authViewModel: AuthViewModel, modifier: Modifier = Modifier) {
                         popUpTo(AllDestination.Login.route) { inclusive = true }
                     }
                 },
-                onLoginError = { /* 에러 처리 */ },
                 authViewModel = authViewModel
             )
         }
