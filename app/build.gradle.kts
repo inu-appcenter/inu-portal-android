@@ -24,8 +24,8 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = true
-            isShrinkResources = true
+            isMinifyEnabled = false
+            isShrinkResources = false
             isPseudoLocalesEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
