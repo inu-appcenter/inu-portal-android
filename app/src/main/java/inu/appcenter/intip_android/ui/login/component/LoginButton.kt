@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import inu.appcenter.intip_android.ui.theme.Blue_9CAFE2
 import inu.appcenter.intip_android.ui.theme.Blue_B5C5F2
+import inu.appcenter.intip_android.ui.theme.Purple_4071B9
 
 @Composable
 fun LoginButton(
@@ -26,8 +27,8 @@ fun LoginButton(
     // isActive가 true이면 purple 그라데이션, 아니면 기존 블루 그라데이션 적용
     val gradientColors = if (isActive) {
         listOf(
-            Color(0xFF4071B9).copy(alpha = 0.7f),
-            Color(0xFF4071B9).copy(alpha = 0.7f)
+            Purple_4071B9.copy(alpha = 0.7f),
+            Purple_4071B9.copy(alpha = 0.7f)
         )
     } else {
         listOf(
