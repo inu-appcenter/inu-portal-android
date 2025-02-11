@@ -13,8 +13,8 @@ android {
         applicationId = "inu.appcenter.intip_android"
         minSdk = 25
         targetSdk = 34
-        versionCode = 8
-        versionName = "0.0.8"
+        versionCode = 9
+        versionName = "0.0.9"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
