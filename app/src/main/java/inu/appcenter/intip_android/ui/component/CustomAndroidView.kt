@@ -20,16 +20,22 @@ import android.webkit.JavascriptInterface
 import android.webkit.JsResult
 import android.webkit.MimeTypeMap
 import android.webkit.URLUtil
+import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
@@ -51,6 +57,15 @@ fun CustomAndroidView(
 ) {
     val context = LocalContext.current
     val webBaseUrl = K.WEB_BASE_URL
+
+    var filePathCallback by remember { mutableStateOf<ValueCallback<Array<Uri>>?>(null) }
+
+    val pickFileLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris: List<Uri> ->
+            val result = if (uris.isNotEmpty()) uris.toTypedArray() else null
+            filePathCallback?.onReceiveValue(result)
+            filePathCallback = null
+        }
 
     // Handle back press for WebView
     BackHandler {
@@ -133,18 +148,23 @@ fun CustomAndroidView(
                         }
 
                         // MIME 타입과 확장자 추출
-                        val actualMimeType = meta.split(";").firstOrNull() ?: "application/octet-stream"
+                        val actualMimeType =
+                            meta.split(";").firstOrNull() ?: "application/octet-stream"
                         val extension = MimeTypeMap.getSingleton()
                             .getExtensionFromMimeType(actualMimeType) ?: "bin"
-                        val fileName = URLUtil.guessFileName(url, contentDisposition, actualMimeType)
-                            .ifBlank { "downloaded_file.$extension" }
+                        val fileName =
+                            URLUtil.guessFileName(url, contentDisposition, actualMimeType)
+                                .ifBlank { "downloaded_file.$extension" }
 
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                             // Android Q 이상: MediaStore API를 사용하여 Pictures 폴더에 저장 (갤러리 자동 등록)
                             val values = ContentValues().apply {
                                 put(MediaStore.Images.Media.DISPLAY_NAME, fileName)
                                 put(MediaStore.Images.Media.MIME_TYPE, actualMimeType)
-                                put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES)
+                                put(
+                                    MediaStore.Images.Media.RELATIVE_PATH,
+                                    Environment.DIRECTORY_PICTURES
+                                )
                             }
                             val uri = context.contentResolver.insert(
                                 MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
@@ -164,7 +184,8 @@ fun CustomAndroidView(
                             }
                         } else {
                             // Android 9(API 28) 이하: Downloads 폴더에 저장 후 MediaScannerConnection.scanFile() 호출
-                            val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+                            val downloadsDir =
+                                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
                             val file = File(downloadsDir, fileName)
                             file.outputStream().use { output ->
                                 output.write(fileData)
@@ -188,7 +209,8 @@ fun CustomAndroidView(
                     }
                 } else {
                     // HTTP/HTTPS URL인 경우 DownloadManager를 사용
-                    val downloadManager = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+                    val downloadManager =
+                        context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
                     val fileName = URLUtil.guessFileName(url, contentDisposition, mimeType)
                     val request = DownloadManager.Request(Uri.parse(url)).apply {
                         addRequestHeader("User-Agent", userAgent)
@@ -213,7 +235,8 @@ fun CustomAndroidView(
                     result: JsResult?
                 ): Boolean {
                     if (message?.contains("로그인 정보가 만료되었습니다") == true ||
-                        message?.contains("다시 로그인해 주세요.") == true) {
+                        message?.contains("다시 로그인해 주세요.") == true
+                    ) {
                         if (!authViewModel.uiState.value.hasShownTokenAlert) {
                             authViewModel.setTokenAlertShown()
                         }
@@ -222,10 +245,25 @@ fun CustomAndroidView(
                     }
                     return super.onJsAlert(view, url, message, result)
                 }
+
+                override fun onShowFileChooser(
+                    webView: WebView?,
+                    callback: ValueCallback<Array<Uri>>?,
+                    fileChooserParams: FileChooserParams?
+                ): Boolean {
+                    filePathCallback?.onReceiveValue(null)
+                    filePathCallback = callback
+
+                    pickFileLauncher.launch(arrayOf("image/*"))
+                    return true
+                }
             }
 
             webViewClient = object : WebViewClient() {
-                override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
+                override fun shouldOverrideUrlLoading(
+                    view: WebView?,
+                    request: WebResourceRequest?
+                ): Boolean {
                     request?.url?.let { uri ->
                         Log.d("CustomWebView", "Intercepted URL: $uri")
 
@@ -279,12 +317,18 @@ fun CustomAndroidView(
                                     typeParam == "notice" -> navController.navigate(AllDestination.TipsNotice.route)
                                     !uri.getQueryParameter("search").isNullOrEmpty() -> {
                                         val searchQuery = uri.getQueryParameter("search") ?: ""
-                                        navController.navigate(AllDestination.TipsSearch.createRoute(searchQuery))
+                                        navController.navigate(
+                                            AllDestination.TipsSearch.createRoute(
+                                                searchQuery
+                                            )
+                                        )
                                     }
+
                                     else -> navController.navigate(AllDestination.Tips.route)
                                 }
                                 return true
                             }
+
                             "/home/council" -> {
                                 when (typeParam) {
                                     "notice" -> navController.navigate(AllDestination.CouncilNotice.route)
@@ -293,6 +337,7 @@ fun CustomAndroidView(
                                 }
                                 return true
                             }
+
                             "/home/campus" -> {
                                 when (typeParam) {
                                     "campusmap" -> navController.navigate(AllDestination.CampusMap.route)
@@ -301,6 +346,7 @@ fun CustomAndroidView(
                                 }
                                 return true
                             }
+
                             "/home/util" -> {
                                 when (typeParam) {
                                     "book" -> navController.navigate(AllDestination.UtilBook.route)
@@ -323,23 +369,31 @@ fun CustomAndroidView(
                                 is AllDestination.PostDetail -> {
                                     navController.navigate(dynamicDestination.createRoute(queryId))
                                 }
+
                                 is AllDestination.CouncilNoticeDetail -> {
                                     navController.navigate(dynamicDestination.createRoute(queryId))
                                 }
+
                                 is AllDestination.PetitionDetail -> {
                                     navController.navigate(dynamicDestination.createRoute(queryId))
                                 }
+
                                 else -> {
-                                    Log.w("CustomWebView", "Unknown dynamic destination: $dynamicDestination")
+                                    Log.w(
+                                        "CustomWebView",
+                                        "Unknown dynamic destination: $dynamicDestination"
+                                    )
                                 }
                             }
                             return true
                         }
 
                         // [CASE B] 정적 라우트
-                        val staticDestination = AllDestination.webViewPage.find { it.webPath == cleanedPath }
+                        val staticDestination =
+                            AllDestination.webViewPage.find { it.webPath == cleanedPath }
                         if (staticDestination != null) {
-                            val currentRoute = navController.currentBackStackEntry?.destination?.route
+                            val currentRoute =
+                                navController.currentBackStackEntry?.destination?.route
                             if (staticDestination.route != currentRoute) {
                                 navController.navigate(staticDestination.route) {
                                     launchSingleTop = true
@@ -350,7 +404,8 @@ fun CustomAndroidView(
                             return true
                         }
 
-                        val destination = AllDestination.webViewPage.find { it.webPath == cleanedPath }
+                        val destination =
+                            AllDestination.webViewPage.find { it.webPath == cleanedPath }
                         destination?.let {
                             navController.navigate(it.route)
                         }
