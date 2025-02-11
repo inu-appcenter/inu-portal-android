@@ -7,13 +7,17 @@ import inu.appcenter.intip_android.local.DataStoreManager
 import inu.appcenter.intip_android.model.member.LoginDto
 import inu.appcenter.intip_android.repository.member.MemberRepository
 import inu.appcenter.intip_android.utils.K
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.Duration
 import java.time.LocalDateTime
 import java.time.format.DateTimeParseException
 
@@ -42,6 +46,9 @@ class AuthViewModel(
     private val _uiState = MutableStateFlow(AuthUiState())
     val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
 
+    // 자동 토큰 갱신을 위한 Job 변수
+    private var refreshJob: Job? = null
+
     init {
         observeToken()
 
@@ -52,17 +59,61 @@ class AuthViewModel(
         }
     }
 
+    /**
+     * 토큰의 상태를 관찰하고, 새로운 토큰이 저장되면 자동 갱신 스케줄을 등록합니다.
+     */
     private fun observeToken() {
         viewModelScope.launch {
             combine(
                 dataStoreManager.accessToken,
                 dataStoreManager.accessTokenExpiredTime
-            ) { token, expiry ->
-                val valid = token != null && expiry != null && !isAccessTokenExpired(expiry)
-                Pair(valid, token)
-            }.collect { (valid, token) ->
-                _uiState.update { it.copy(hasToken = valid, token = token) }
-                Log.d("AuthViewModel", "유효 토큰 여부: $valid, Token: $token")
+            ) { token, expiry -> Pair(token, expiry) }
+                .distinctUntilChanged()  // 토큰 관련 값이 바뀔 때만 반응
+                .collect { (token, expiry) ->
+                    if (token != null && expiry != null) {
+                        val valid = !isAccessTokenExpired(expiry)
+                        _uiState.update { it.copy(hasToken = valid, token = token) }
+                        if (valid) {
+                            // 유효한 토큰이 있으면 자동 갱신 스케줄 등록
+                            scheduleTokenRefresh(expiry)
+                        } else {
+                            // 만료된 경우 자동 갱신 작업 취소 (필요 시 추가 처리 가능)
+                            refreshJob?.cancel()
+                        }
+                    } else {
+                        _uiState.update { it.copy(hasToken = false, token = null) }
+                        refreshJob?.cancel()
+                    }
+                }
+        }
+    }
+
+    /**
+     * access token 만료 1분 전(원하는 버퍼 시간) 자동 갱신을 위한 스케줄링 함수
+     */
+    private fun scheduleTokenRefresh(expiredTimeString: String) {
+        refreshJob?.cancel() // 기존 스케줄 취소
+        refreshJob = viewModelScope.launch {
+            try {
+                val expiry = LocalDateTime.parse(expiredTimeString)
+                val now = LocalDateTime.now()
+                // 만료 1분 전에 갱신 (원하는 버퍼 시간으로 조정 가능)
+                val refreshTime = expiry.minusMinutes(1)
+                val delayMillis = Duration.between(now, refreshTime).toMillis()
+                if (delayMillis > 0) {
+                    Log.d("AuthViewModel", "토큰 갱신까지 ${delayMillis}ms 대기")
+                    delay(delayMillis)
+                }
+                Log.d("AuthViewModel", "자동 토큰 갱신 시도 (만료 1분 전)")
+                val refreshed = refreshToken()
+                if (refreshed) {
+                    Log.d("AuthViewModel", "자동 토큰 갱신 성공")
+                } else {
+                    Log.e("AuthViewModel", "자동 토큰 갱신 실패")
+                    // 자동 갱신 실패 시 로그아웃 처리하거나 추가 알림 로직 구현 가능
+                }
+            } catch (e: Exception) {
+                Log.e("AuthViewModel", "토큰 갱신 스케줄링 에러: ${e.message}")
             }
         }
     }
@@ -79,17 +130,16 @@ class AuthViewModel(
         _uiState.update { it.copy(hasShownTokenAlert = true) }
     }
 
-
     /**
-     * 토큰 만료여부 확인 함수
-     * 파라미터로 들어온 expiredTimeString (예: "2025-01-22T23:25:47.754524713")을 LocalDateTime으로 파싱하여 현재시간과 비교합니다.
+     * 토큰 만료 여부 확인 함수
+     * 파라미터로 들어온 expiredTimeString (예: "2025-01-22T23:25:47.754524713")을 LocalDateTime으로 파싱하여 현재 시간과 비교합니다.
      */
     private fun isAccessTokenExpired(expiredTimeString: String): Boolean {
         return try {
             val expiry = LocalDateTime.parse(expiredTimeString)
             LocalDateTime.now().isAfter(expiry)
         } catch (e: DateTimeParseException) {
-            // 파싱 오류가 발생하면 만료된 것으로 간주합니다.
+            // 파싱 오류 발생 시 만료된 것으로 간주
             true
         }
     }
@@ -103,9 +153,9 @@ class AuthViewModel(
         val currentRefreshToken = dataStoreManager.refreshToken.first()
         val currentRefreshExpiry = dataStoreManager.refreshTokenExpiredTime.first()
 
-        if (currentRefreshToken.isNullOrEmpty() || currentRefreshExpiry.isNullOrEmpty() || isAccessTokenExpired(
-                currentRefreshExpiry
-            )
+        if (currentRefreshToken.isNullOrEmpty() ||
+            currentRefreshExpiry.isNullOrEmpty() ||
+            isAccessTokenExpired(currentRefreshExpiry)
         ) {
             return false
         }
@@ -127,12 +177,13 @@ class AuthViewModel(
 
         return false
     }
+
     /**
      * 로그인 함수
-     * 1. 우선 DataStore에 저장된 accessToken과 accessTokenExpiredTime을 확인합니다.
-     * 2. 토큰이 존재하면 만료여부를 판단합니다.
+     * 1. DataStore에 저장된 accessToken과 accessTokenExpiredTime을 확인합니다.
+     * 2. 토큰이 존재하면 만료 여부를 판단합니다.
      *    - 유효하면 바로 로그인 성공 처리합니다.
-     *    - 만료되었다면 refreshToken() 함수를 통해 새 토큰 발급 후 새 토큰의 유효성을 확인합니다.
+     *    - 만료되었다면 refreshToken() 함수를 통해 새 토큰 발급 시도 후, 성공하면 로그인 성공 처리합니다.
      * 3. 토큰이 없거나 갱신에 실패하면 기존 로그인 API 호출로 진행합니다.
      */
     fun login(loginDto: LoginDto) {
@@ -200,6 +251,7 @@ class AuthViewModel(
                         hasToken = false
                     )
                 }
+                refreshJob?.cancel()
             } catch (e: Exception) {
                 _uiState.update {
                     it.copy(
