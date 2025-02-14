@@ -116,6 +116,17 @@ class AuthViewModel(
         return false
     }
 
+    suspend fun ensureValidToken() {
+        val currentToken = dataStoreManager.accessToken.first()
+        val currentTokenExpiry = dataStoreManager.accessTokenExpiredTime.first()
+        if (currentToken != null && currentTokenExpiry != null) {
+            if (isAccessTokenExpired(currentTokenExpiry)) {
+                Log.d("AuthViewModel", "Access token expired, attempting to refresh...")
+                refreshToken()  // 토큰 갱신 시도 (refreshToken은 이미 구현되어 있음)
+            }
+        }
+    }
+
     /**
      * safeApiCall 함수
      * API 호출 후 토큰 만료 응답(예: HTTP 401)을 감지하면 refreshToken()을 호출하고,

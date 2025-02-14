@@ -13,12 +13,13 @@ import androidx.navigation.NavController
 import coil.ImageLoader
 import coil.compose.AsyncImage
 import coil.decode.SvgDecoder
+import inu.appcenter.intip_android.ui.login.AuthViewModel
 import inu.appcenter.intip_android.ui.navigate.AllDestination
 import inu.appcenter.intip_android.utils.K
 import kotlinx.coroutines.delay
 
 @Composable
-fun SplashScreen(navController: NavController) {
+fun SplashScreen(navController: NavController, authViewModel: AuthViewModel) {
     val context = androidx.compose.ui.platform.LocalContext.current
 
     // SVG 디코딩을 위한 ImageLoader 구성
@@ -26,9 +27,11 @@ fun SplashScreen(navController: NavController) {
         .components { add(SvgDecoder.Factory()) }
         .build()
 
-    // 스플래시 화면에서 일정 시간 대기 후 홈 화면으로 네비게이션
+    // 스플래시 화면에서 일정 시간 대기 전에 토큰 유효성 확인 및 갱신
     LaunchedEffect(key1 = true) {
-        delay(K.SPLASH_DELAY) // 2초 대기 (필요에 따라 조정)
+        // 토큰이 만료되었으면 refreshToken()을 호출해서 갱신
+        authViewModel.ensureValidToken()
+        delay(K.SPLASH_DELAY) // 예: 2초 대기 (필요에 따라 조정)
         navController.navigate(AllDestination.Home.route) {
             popUpTo(AllDestination.Splash.route) { inclusive = true }
         }
