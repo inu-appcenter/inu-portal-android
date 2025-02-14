@@ -13,26 +13,49 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavHostController
 import inu.appcenter.intip_android.ui.component.AppBottomBar
 import inu.appcenter.intip_android.ui.component.CustomAndroidView
 import inu.appcenter.intip_android.ui.login.AuthViewModel
 import inu.appcenter.intip_android.utils.K
+import kotlinx.coroutines.launch
 
 @Composable
 fun WebViewScreen(
-    modifier: Modifier = Modifier,
     navController: NavHostController,
     path: String,
     authViewModel: AuthViewModel,
     isShowBottomBar: Boolean
 ) {
+//    // 앱의 라이프사이클을 관찰하여 onResume 시에 토큰을 다시 확인
+//    val lifecycleOwner = LocalLifecycleOwner.current
+//    val coroutineScope = rememberCoroutineScope()
+//    DisposableEffect(lifecycleOwner) {
+//        val observer = LifecycleEventObserver { _, event ->
+//            if (event == Lifecycle.Event.ON_RESUME) {
+//                coroutineScope.launch {
+//                    authViewModel.ensureValidToken()
+//                }
+//            }
+//        }
+//        lifecycleOwner.lifecycle.addObserver(observer)
+//        onDispose {
+//            lifecycleOwner.lifecycle.removeObserver(observer)
+//        }
+//    }
+
+
     val uiState by authViewModel.uiState.collectAsState()
 
     Scaffold(
