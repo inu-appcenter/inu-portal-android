@@ -1,5 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">INTIP</string>
+    <!-- SplashScreen 관련 문자열 -->
     <string name="splash_logo_desc">Splash Logo</string>
+    <!-- LoginScreen 관련 문자열 -->
+    <string name="login_logo_desc">INTIP Logo</string>
+    <string name="login_description">인천대학교 포털시스템 계정으로 로그인 할 수 있습니다.</string>
+    <string name="login_student_id_label">학번</string>
+    <string name="login_student_id_hint">예) 202100000</string>
+    <string name="login_password_label">비밀번호</string>
+    <string name="login_button_text">로그인</string>
+    <string name="confirm_text">확인</string>
 </resources>

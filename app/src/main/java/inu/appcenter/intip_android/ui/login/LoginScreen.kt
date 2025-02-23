@@ -28,9 +28,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import coil.ImageLoader
 import coil.compose.AsyncImage
 import coil.decode.SvgDecoder
@@ -73,10 +74,14 @@ fun LoginScreen(
             is AuthState.Success -> {
                 onLoginSuccess()
             }
-            // AlertDialog는 여기서 바로 띄우지 않고, Composable 내 조건문으로 처리함.
             else -> { /* Idle, Loading 등은 별도 처리 없음 */ }
         }
     }
+
+    // 글자 크기 리소스 사용을 위한 LocalDensity 접근
+    val density = LocalDensity.current
+    val fontSizeSmall = with(density) { dimensionResource(id = R.dimen.font_size_small).toSp() }
+    val fontSizeMedium = with(density) { dimensionResource(id = R.dimen.font_size_medium).toSp() }
 
     Scaffold(
         containerColor = Color.White // 항상 흰색 배경
@@ -86,47 +91,61 @@ fun LoginScreen(
                 .verticalScroll(scrollState)
                 .padding(contentPadding)
                 .fillMaxSize()
-                .padding(32.dp),
+                .padding(dimensionResource(id = R.dimen.login_screen_padding)),
             verticalArrangement = Arrangement.Center,
         ) {
             // 로고 이미지
             AsyncImage(
                 model = K.LOGO_IMAGE_URL,
-                contentDescription = "INTIP Logo",
+                contentDescription = stringResource(id = R.string.login_logo_desc),
                 imageLoader = imageLoader,
                 modifier = Modifier
                     .align(Alignment.CenterHorizontally)
-                    .padding(start = 6.dp)
-                    .size(width = 304.dp, height = 141.6.dp)
+                    .padding(start = dimensionResource(id = R.dimen.login_logo_padding_start))
+                    .size(
+                        width = dimensionResource(id = R.dimen.login_logo_width),
+                        height = dimensionResource(id = R.dimen.login_logo_height)
+                    )
             )
-            Spacer(Modifier.height(90.dp))
+            Spacer(Modifier.height(dimensionResource(id = R.dimen.spacer_height_after_logo)))
 
-            Text(text = "인천대학교 포털시스템 계정으로 로그인 할 수 있습니다.", fontSize = 12.9.sp)
-            Spacer(Modifier.height(10.dp))
-            Text(text = "학번", fontSize = 18.sp)
+            Text(
+                text = stringResource(id = R.string.login_description),
+                fontSize = fontSizeSmall
+            )
+            Spacer(Modifier.height(dimensionResource(id = R.dimen.spacer_height_after_login_description)))
+
+            Text(
+                text = stringResource(id = R.string.login_student_id_label),
+                fontSize = fontSizeMedium
+            )
 
             // 학번 입력 필드
             LoginPageTextField(
                 value = authUiState.loginId,
                 onValueChange = { authViewModel.setLoginId(it) },
-                labelText = "예) 202100000",
+                labelText = stringResource(id = R.string.login_student_id_hint),
                 iconResource = R.drawable.icon_studentid,
                 isPassword = false
             )
-            Spacer(Modifier.height(32.dp))
-            Text(text = "비밀번호", fontSize = 18.sp)
+            Spacer(Modifier.height(dimensionResource(id = R.dimen.spacer_height_between_fields)))
+
+            Text(
+                text = stringResource(id = R.string.login_password_label),
+                fontSize = fontSizeMedium
+            )
 
             // 비밀번호 입력 필드
             LoginPageTextField(
                 value = authUiState.loginPw,
                 onValueChange = { authViewModel.setLoginPw(it) },
-                labelText = "비밀번호",
+                labelText = stringResource(id = R.string.login_password_label),
                 iconResource = R.drawable.icon_password,
                 isPassword = true,
                 passwordVisible = passwordVisible,
                 onPasswordToggle = { passwordVisible = !passwordVisible }
             )
-            Spacer(Modifier.height(48.dp))
+            Spacer(Modifier.height(dimensionResource(id = R.dimen.spacer_height_after_password_field)))
 
             // 로그인 버튼
             LoginButton(
@@ -138,10 +157,10 @@ fun LoginScreen(
                         )
                     )
                 },
-                text = "로그인",
+                text = stringResource(id = R.string.login_button_text),
                 isActive = isBothFilled
             )
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(dimensionResource(id = R.dimen.spacer_height_before_agreement)))
 
             // 약관 텍스트
             AgreementText(onOpenUrl = onOpenUrl)
@@ -176,7 +195,7 @@ fun LoginScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         TextButton(onClick = { authViewModel.resetState() }) {
-                            Text(text = "확인")
+                            Text(text = stringResource(id = R.string.confirm_text))
                         }
                     }
                 }

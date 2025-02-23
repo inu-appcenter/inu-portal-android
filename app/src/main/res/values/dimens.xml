@@ -1,6 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- WebViewScreen 관련 디멘션 -->
     <dimen name="bottom_bar_offset">17dp</dimen>
+    <!-- SplashScreen 관련 디멘션 -->
     <dimen name="splash_image_width">304dp</dimen>
     <dimen name="splash_image_height">141.6dp</dimen>
+    <!-- LoginScreen 관련 디멘션 -->
+    <dimen name="login_screen_padding">32dp</dimen>
+    <dimen name="login_logo_padding_start">6dp</dimen>
+    <dimen name="login_logo_width">304dp</dimen>
+    <dimen name="login_logo_height">141.6dp</dimen>
+    <dimen name="spacer_height_after_logo">90dp</dimen>
+    <dimen name="spacer_height_after_login_description">10dp</dimen>
+    <dimen name="spacer_height_between_fields">32dp</dimen>
+    <dimen name="spacer_height_after_password_field">48dp</dimen>
+    <dimen name="spacer_height_before_agreement">16dp</dimen>
+    <dimen name="font_size_small">12.9sp</dimen>
+    <dimen name="font_size_medium">18sp</dimen>
 </resources>
