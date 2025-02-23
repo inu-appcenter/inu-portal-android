@@ -37,7 +37,14 @@ fun MyApp(authViewModel: AuthViewModel, modifier: Modifier = Modifier) {
     ) {
 
         composable(AllDestination.Splash.route) {
-            SplashScreen(navController = navController, authViewModel = authViewModel)
+            SplashScreen(
+                onSplashComplete = {
+                    navController.navigate(AllDestination.Home.route) {
+                        popUpTo(AllDestination.Splash.route) { inclusive = true }
+                    }
+                },
+                authViewModel = authViewModel
+            )
         }
 
         // 1) 로그인 페이지
