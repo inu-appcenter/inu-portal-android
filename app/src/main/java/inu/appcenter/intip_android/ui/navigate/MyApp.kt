@@ -1,6 +1,8 @@
 package inu.appcenter.intip_android.ui.navigate
 
 import android.app.Activity
+import android.content.Intent
+import android.net.Uri
 import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -50,12 +52,16 @@ fun MyApp(authViewModel: AuthViewModel, modifier: Modifier = Modifier) {
         // 1) 로그인 페이지
         composable(AllDestination.Login.route) {
             LoginScreen(
+                authViewModel = authViewModel,
                 onLoginSuccess = {
                     navController.navigate(AllDestination.Home.route) {
                         popUpTo(AllDestination.Login.route) { inclusive = true }
                     }
                 },
-                authViewModel = authViewModel
+                onOpenUrl = { url ->
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                    context.startActivity(intent)
+                }
             )
         }
 

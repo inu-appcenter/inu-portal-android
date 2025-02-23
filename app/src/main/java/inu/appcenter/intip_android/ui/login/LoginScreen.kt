@@ -1,7 +1,5 @@
 package inu.appcenter.intip_android.ui.login
 
-import android.content.Intent
-import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -47,7 +45,8 @@ import inu.appcenter.intip_android.utils.K
 @Composable
 fun LoginScreen(
     authViewModel: AuthViewModel,
-    onLoginSuccess: () -> Unit
+    onLoginSuccess: () -> Unit,
+    onOpenUrl: (String) -> Unit
 ) {
     // 초기 상태 리셋
     LaunchedEffect(Unit) {
@@ -145,10 +144,7 @@ fun LoginScreen(
             Spacer(Modifier.height(16.dp))
 
             // 약관 텍스트
-            AgreementText(onOpenUrl = { url ->
-                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-                context.startActivity(intent)
-            })
+            AgreementText(onOpenUrl = onOpenUrl)
 
             // 로딩 상태 표시
             if (authUiState.loginState == AuthState.Loading) {
