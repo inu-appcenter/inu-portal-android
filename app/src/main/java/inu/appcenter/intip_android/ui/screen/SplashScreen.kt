@@ -8,10 +8,13 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import coil.ImageLoader
 import coil.compose.AsyncImage
 import coil.decode.SvgDecoder
+import inu.appcenter.intip_android.R
 import inu.appcenter.intip_android.ui.login.AuthViewModel
 import inu.appcenter.intip_android.utils.K
 import kotlinx.coroutines.delay
@@ -44,10 +47,13 @@ fun SplashScreen(
         // SVG 로고 이미지 로드 및 표시
         AsyncImage(
             model = K.LOGO_IMAGE_URL,
-            contentDescription = "Splash Logo",
+            contentDescription = stringResource(id = R.string.splash_logo_desc),
             imageLoader = imageLoader,
             contentScale = ContentScale.Fit,
-            modifier = Modifier.size(width = 304.dp, height = 141.6.dp)
+            modifier = Modifier.size(
+                width = dimensionResource(id = R.dimen.splash_image_width),
+                height = dimensionResource(id = R.dimen.splash_image_height)
+            )
         )
     }
 }

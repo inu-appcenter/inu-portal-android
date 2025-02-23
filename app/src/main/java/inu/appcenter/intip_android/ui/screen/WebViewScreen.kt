@@ -13,23 +13,18 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavHostController
+import inu.appcenter.intip_android.R
 import inu.appcenter.intip_android.ui.component.AppBottomBar
 import inu.appcenter.intip_android.ui.component.CustomAndroidView
 import inu.appcenter.intip_android.ui.login.AuthViewModel
-import inu.appcenter.intip_android.utils.K
-import kotlinx.coroutines.launch
 
 @Composable
 fun WebViewScreen(
@@ -81,7 +76,7 @@ fun WebViewScreen(
                 end = paddingValue.calculateEndPadding(LayoutDirection.Rtl),
                 top = paddingValue.calculateTopPadding(),
                 // Scafflod의 기본 BottomPadding에서 BottomNavigation의 둥근 정도를 뺀 값
-                bottom = paddingValue.calculateBottomPadding() - K.BOTTOM_BAR_OFFSET
+                bottom = paddingValue.calculateBottomPadding() - dimensionResource(R.dimen.bottom_bar_offset)
             )
         } else {
             PaddingValues(

@@ -29,9 +29,4 @@ object K {
 
     // BottomBar 관련 상수 (BottomBar를 보여줄 목적지 목록)
     val BOTTOM_BAR_DESTINATIONS = listOf(AllDestination.Home, AllDestination.Write, AllDestination.Save, AllDestination.MyPage)
-    // BottomBar의 둥근 모서리 보정값 (Scaffold의 기본 BottomPadding에서 차감)
-    val BOTTOM_BAR_OFFSET = 17.dp
-
-    // 상태 메시지
-    const val UNKNOWN_ERROR_MESSAGE = "Unknown error"
 }

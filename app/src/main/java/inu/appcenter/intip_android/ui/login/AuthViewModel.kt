@@ -6,7 +6,6 @@ import androidx.lifecycle.viewModelScope
 import inu.appcenter.intip_android.local.DataStoreManager
 import inu.appcenter.intip_android.model.member.LoginDto
 import inu.appcenter.intip_android.repository.member.MemberRepository
-import inu.appcenter.intip_android.utils.K
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -16,6 +15,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.time.format.DateTimeParseException
+
+private const val UNKNOWN_ERROR_MESSAGE = "Unknown error"
 
 sealed class AuthState {
     object Idle : AuthState()
@@ -195,7 +196,7 @@ class AuthViewModel(
                 }
             } catch (e: Exception) {
                 Log.e("login", e.message ?: "error")
-                val errorMessage = e.message?.let { extractErrorMessage(it) } ?: K.UNKNOWN_ERROR_MESSAGE
+                val errorMessage = e.message?.let { extractErrorMessage(it) } ?: UNKNOWN_ERROR_MESSAGE
                 _uiState.update { it.copy(loginState = AuthState.Error(errorMessage)) }
             }
         }
@@ -208,7 +209,7 @@ class AuthViewModel(
                 dataStoreManager.clearTokens()
                 _uiState.update { it.copy(logoutState = AuthState.Success, hasToken = false) }
             } catch (e: Exception) {
-                _uiState.update { it.copy(logoutState = AuthState.Error(e.message ?: K.UNKNOWN_ERROR_MESSAGE)) }
+                _uiState.update { it.copy(logoutState = AuthState.Error(e.message ?: UNKNOWN_ERROR_MESSAGE)) }
             }
         }
     }
