@@ -92,15 +92,20 @@ class AuthViewModel(
      * refreshToken 함수
      * 저장된 refresh token 정보를 기반으로 새로운 access token과 refresh token을 받아옵니다.
      * (서버에서 두 토큰을 모두 재발급한다고 가정)
+     * 리프레시 토큰이 만료된 경우 모든 토큰을 비웁니다.
      */
     private suspend fun refreshToken(): Boolean {
         val currentRefreshToken = dataStoreManager.refreshToken.first()
         val currentRefreshExpiry = dataStoreManager.refreshTokenExpiredTime.first()
 
+        // 리프레시 토큰이 없거나 만료된 경우
         if (currentRefreshToken.isNullOrEmpty() ||
             currentRefreshExpiry.isNullOrEmpty() ||
             isAccessTokenExpired(currentRefreshExpiry)
         ) {
+            // 토큰 비우기 추가
+            Log.d("AuthViewModel", "리프레시 토큰이 만료되어 모든 토큰을 비웁니다.")
+            dataStoreManager.clearTokens()
             return false
         }
 
@@ -113,25 +118,32 @@ class AuthViewModel(
             dataStoreManager.saveRefreshToken(tokenDto.refreshToken, tokenDto.refreshTokenExpiredTime)
             Log.d("AuthViewModel", "토큰 재발급 성공, 새 토큰: ${tokenDto.accessToken}")
             return true
+        } else {
+            // API 호출 실패 시에도 토큰을 비웁니다 (401 또는 토큰 관련 오류인 경우)
+            if (isTokenExpiredResponse(response)) {
+                Log.d("AuthViewModel", "토큰 갱신 API 실패로 모든 토큰을 비웁니다.")
+                dataStoreManager.clearTokens()
+            }
+            return false
         }
-        return false
     }
 
     suspend fun ensureValidToken() {
         val currentToken = dataStoreManager.accessToken.first()
         val currentTokenExpiry = dataStoreManager.accessTokenExpiredTime.first()
+
         if (currentToken != null && currentTokenExpiry != null) {
             if (isAccessTokenExpired(currentTokenExpiry)) {
                 Log.d("AuthViewModel", "Access token expired, attempting to refresh...")
-                refreshToken()  // 토큰 갱신 시도 (refreshToken은 이미 구현되어 있음)
+                refreshToken()  // refreshToken() 내부에서 이미 리프레시 토큰 유효성 검사 및 처리가 됨
             }
         }
     }
 
     /**
      * safeApiCall 함수
-     * API 호출 후 토큰 만료 응답(예: HTTP 401)을 감지하면 refreshToken()을 호출하고,
-     * 새 토큰으로 동일 API를 재요청합니다.
+     * API 호출 후 토큰 만료 응답을 감지하면 refreshToken()을 호출하고,
+     * refreshToken() 실패 시 모든 토큰을 비웁니다 (refreshToken 내부에서 처리됨)
      */
     private suspend fun <T> safeApiCall(apiCall: suspend () -> retrofit2.Response<T>): retrofit2.Response<T> {
         var response = apiCall()
@@ -140,18 +152,24 @@ class AuthViewModel(
             if (refreshSuccess) {
                 response = apiCall()
             }
+            // refreshToken()이 실패하면 이미 토큰이 비워진 상태
         }
         return response
     }
 
     /**
      * 서버 응답이 토큰 만료를 나타내는지 판단하는 함수
-     * 예시로 HTTP 401 코드나 errorBody의 특정 문구를 확인합니다.
+     * HTTP 401 코드나 errorBody의 특정 문구를 확인합니다.
      */
     private fun <T> isTokenExpiredResponse(response: retrofit2.Response<T>): Boolean {
-        if (response.code() == 401) return true
+        // 401 Unauthorized나 403 Forbidden은 토큰 관련 문제일 가능성이 높음
+        if (response.code() == 401 || response.code() == 403) return true
+
         val errorBody = response.errorBody()?.string() ?: ""
-        return errorBody.contains("토큰 만료") || errorBody.contains("만료")
+        return errorBody.contains("토큰 만료") ||
+                errorBody.contains("만료") ||
+                errorBody.contains("token") ||
+                errorBody.contains("unauthorized")
     }
 
     /**
