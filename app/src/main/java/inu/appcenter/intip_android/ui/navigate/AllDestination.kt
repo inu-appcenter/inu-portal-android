@@ -9,7 +9,7 @@ sealed class AllDestination(val route: String, val label: String, val webPath: S
             Menu,
             Calendar,
             Campus, CampusMap, CampusHelloBus,      // Campus 관련 페이지들
-            Util, UtilBook, UtilLost, UtilRentals,  // Util 관련 페이지들
+            Util, UtilBook, UtilLost, UtilRentals, UtilBookSearch,  // Util 관련 페이지들
             Council, CouncilNotice, CouncilPetition,  // Council 관련 페이지들
             Club,
             Rental,
