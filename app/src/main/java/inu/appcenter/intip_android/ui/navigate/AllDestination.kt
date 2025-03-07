@@ -88,5 +88,10 @@ sealed class AllDestination(val route: String, val label: String, val webPath: S
         const val routePattern = "petitionDetail/{petitionId}"
     }
 
+    data object UtilBookSearch : AllDestination("util_book_search", "도서 검색", "/home/util") {
+        fun createRoute(searchQuery: String): String = "$route?search=$searchQuery"
+        const val routePattern = "util_book_search?search={search}"
+    }
+
     data object Login : AllDestination("login", "로그인", "/login")
 }
