@@ -11,7 +11,7 @@ android {
 
     signingConfigs {
         create("release") {
-            storeFile = rootProject.file("app/keystore.jks")
+            storeFile = rootProject.file("keystore.jks")
             storePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
             keyAlias = "key0"
             keyPassword = System.getenv("ANDROID_KEY_PASSWORD")
