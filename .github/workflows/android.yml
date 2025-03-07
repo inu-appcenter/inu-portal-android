@@ -37,13 +37,18 @@ jobs:
     - name: Decode and restore keystore
       run: |
         echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > app/keystore.jks
-    
+    - name: Check if keystore exists
+      run: ls -la app/
+        
     - name: Build Signed AAB
-      run: ./gradlew bundleRelease -Pandroid.injected.signing.store.file=app/keystore.jks \
-                                  -Pandroid.injected.signing.store.password=${{ secrets.ANDROID_KEYSTORE_PASSWORD }} \
-                                  -Pandroid.injected.signing.key.alias=key0 \
-                                  -Pandroid.injected.signing.key.password=${{ secrets.ANDROID_KEY_PASSWORD }}
-
+      run: ./gradlew bundleRelease \
+        -Pandroid.injected.signing.store.file=app/keystore.jks \
+        -Pandroid.injected.signing.store.password=${{ secrets.ANDROID_KEYSTORE_PASSWORD }} \
+        -Pandroid.injected.signing.key.alias=key0 \
+        -Pandroid.injected.signing.key.password=${{ secrets.ANDROID_KEY_PASSWORD }}
+    
+    - name: Check if keystore exists
+      run: ls -la app/release
 
     # - name: Upload Android Release to Play Store
     #   uses: r0adkll/upload-google-play@v1.1.3
