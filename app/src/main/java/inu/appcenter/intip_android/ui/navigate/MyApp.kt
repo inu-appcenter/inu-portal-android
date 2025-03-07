@@ -79,6 +79,19 @@ fun MyApp(authViewModel: AuthViewModel, modifier: Modifier = Modifier) {
 
         // 3) 동적 라우트들: 쿼리 필요
         composable(
+            route = AllDestination.UtilBookSearch.routePattern,
+            arguments = listOf(navArgument("search") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val searchQuery = backStackEntry.arguments?.getString("search") ?: ""
+            WebViewScreen(
+                navController = navController,
+                path = "${AllDestination.UtilBookSearch.webPath}?type=book&search=$searchQuery",
+                authViewModel = authViewModel,
+                isShowBottomBar = false
+            )
+        }
+
+        composable(
             route = AllDestination.TipsSearch.routePattern,
             arguments = listOf(navArgument("search") { type = NavType.StringType })
         ) { backStackEntry ->
