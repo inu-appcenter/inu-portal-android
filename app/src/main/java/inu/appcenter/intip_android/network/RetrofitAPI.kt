@@ -9,6 +9,7 @@ import okhttp3.logging.HttpLoggingInterceptor
 import org.koin.core.component.KoinComponent
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.util.concurrent.TimeUnit
 
 class RetrofitAPI(private val dataStoreManager: DataStoreManager) : KoinComponent {
 
@@ -22,6 +23,10 @@ class RetrofitAPI(private val dataStoreManager: DataStoreManager) : KoinComponen
     private val client = OkHttpClient.Builder()
         .addInterceptor(AuthInterceptor(dataStoreManager))
         .addInterceptor(loggingInterceptor)
+        // java.net.SocketTimeoutException
+        .connectTimeout(15, TimeUnit.SECONDS)  // 연결 타임아웃
+        .readTimeout(15, TimeUnit.SECONDS)     // 읽기 타임아웃
+        .writeTimeout(15, TimeUnit.SECONDS)    // 쓰기 타임아웃
         .build()
 
     private val retrofit: Retrofit by lazy {
