@@ -56,10 +56,5 @@ inu.appcenter.intip_android
 - Kotlin 1.9.0 이상
 - Android SDK 25 이상
 
-### 설치 방법
-```bash
-git clone https://github.com/inu-appcenter/inu-portal-android.git
-```
-
 ## 버전 정보
 현재 버전: 0.1.2 (versionCode: 12)
