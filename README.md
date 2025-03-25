@@ -19,23 +19,19 @@
 - **로컬 데이터 저장**: DataStore
 - **분석 및 모니터링**: Firebase Analytics, Crashlytics
 
-## 프로젝트 구조
+## 아키텍처 구조
 
-```
-inu.appcenter.intip_android
-├── di        - Koin 종속성 주입 설정
-├── local     - 로컬 데이터 관리
-├── model     - 데이터 모델 클래스
-├── network   - API 통신 (Retrofit, 인터셉터)
-├── repository - 데이터 리포지토리
-├── ui
-│   ├── component - 재사용 가능한 UI 컴포넌트
-│   ├── login     - 로그인 관련 UI
-│   ├── navigate  - 네비게이션 설정
-│   ├── screen    - 화면 UI
-│   └── theme     - 앱 테마 및 스타일
-└── utils     - 유틸리티 함수 및 상수
-```
+이 프로젝트는 안드로이드 권장 앱 아키텍처를 따르며 다음과 같은 계층 구조로 구성되어 있습니다:
+
+1. **UI 계층 (Presentation)**
+   - Jetpack Compose UI 컴포넌트
+   - ViewModel (UI 상태 관리 및 비즈니스 로직 처리)
+
+2. **데이터 계층 (Data)**
+   - Repository (데이터 액세스 추상화)
+   - 네트워크 (API 서비스)
+   - 로컬 저장소 (DataStore)
+   - 모델 (데이터 모델링)
 
 ## 주요 기능
 
@@ -49,12 +45,8 @@ inu.appcenter.intip_android
 - 총학생회 소식 및 청원 시스템
 - 사용자 프로필 관리
 
-## 시작하기
+## 개발 환경
 
-### 요구사항
-- Android Studio Arctic Fox 이상
-- Kotlin 1.9.0 이상
+- 최신 Android Studio 권장
+- Kotlin
 - Android SDK 25 이상
-
-## 버전 정보
-현재 버전: 0.1.2 (versionCode: 12)
