@@ -11,10 +11,18 @@ android {
 
     signingConfigs {
         create("release") {
-            storeFile = rootProject.file("keystore.jks")
-            storePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
-            keyAlias = "key0"
-            keyPassword = System.getenv("ANDROID_KEY_PASSWORD")
+            val storeFilePath =
+                project.findProperty("android.injected.signing.store.file")?.toString()
+                    ?: "app/keystore.jks"
+
+            storeFile = file("$rootDir/$storeFilePath")
+
+            storePassword =
+                project.findProperty("android.injected.signing.store.password")?.toString() ?: ""
+            keyAlias =
+                project.findProperty("android.injected.signing.key.alias")?.toString() ?: ""
+            keyPassword =
+                project.findProperty("android.injected.signing.key.password")?.toString() ?: ""
         }
     }
 
@@ -33,6 +41,7 @@ android {
 
     buildTypes {
         release {
+            signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = false
             isShrinkResources = false
             isPseudoLocalesEnabled = true
