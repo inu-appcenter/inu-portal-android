@@ -11,10 +11,14 @@ import okhttp3.Response
 class AuthInterceptor(private val dataStoreManager: DataStoreManager) : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         val request = chain.request()
-        val url = request.url.toString()
+        val url = request.url
+        val path = url.encodedPath
+
+        Log.d("AuthInterceptor", "URL: $url, Path: $path, REFRESH: ${K.REFRESH}")
 
         // 토큰 갱신 요청을 인터셉트에서 제외합니다.
-        if (url.contains(K.REFRESH)) {
+        if (path.endsWith(K.REFRESH)) {
+            Log.d("AuthInterceptor", "토큰 갱신 요청 감지: 인터셉트 제외")
             return chain.proceed(request)
         }
 
