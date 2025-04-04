@@ -11,7 +11,7 @@ sealed class AllDestination(val route: String, val label: String, val webPath: S
             Campus, CampusMap, CampusHelloBus,      // Campus 관련 페이지들
             Util, UtilBook, UtilLost, UtilRentals, UtilBookSearch,  // Util 관련 페이지들
             Council, CouncilNotice, CouncilPetition,  // Council 관련 페이지들
-            Club,
+            Club, RecruitDetail,    // Club 관련 페이지들
             Rental,
             Write,
             Save,
@@ -91,6 +91,11 @@ sealed class AllDestination(val route: String, val label: String, val webPath: S
     data object UtilBookSearch : AllDestination("util_book_search", "도서 검색", "/home/util") {
         fun createRoute(searchQuery: String): String = "$route?search=$searchQuery"
         const val routePattern = "util_book_search?search={search}"
+    }
+
+    data object RecruitDetail : AllDestination("recruitDetail", "동아리 모집공고", "/home/recruitdetail") {
+        fun createRoute(id: String, name: String): String = "$route?id=$id&name=$name"
+        const val routePattern = "recruitDetail?id={id}&name={name}"
     }
 
     data object Login : AllDestination("login", "로그인", "/login")
