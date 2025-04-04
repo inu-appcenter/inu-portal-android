@@ -368,28 +368,38 @@ fun CustomAndroidView(
                         // [CASE A] 동적 라우트에 해당하는지 확인 (ex: /postdetail)
                         val dynamicDestination = dynamicRoutesMap[cleanedPath]
                         if (dynamicDestination != null) {
-                            if (queryId.isNullOrEmpty()) {
-                                Log.w("CustomWebView", "동적 라우트인데 id가 없음 → 웹뷰로 처리")
-                                return super.shouldOverrideUrlLoading(view, request)
-                            }
                             when (dynamicDestination) {
-                                is AllDestination.PostDetail -> {
-                                    navController.navigate(dynamicDestination.createRoute(queryId))
-                                }
+                                is AllDestination.RecruitDetail -> {
+                                    // RecruitDetail은 id와 name 두 가지 파라미터가 필요합니다
+                                    val id = uri.getQueryParameter("id")
+                                    val name = uri.getQueryParameter("name")
 
-                                is AllDestination.CouncilNoticeDetail -> {
-                                    navController.navigate(dynamicDestination.createRoute(queryId))
-                                }
+                                    if (id.isNullOrEmpty() || name.isNullOrEmpty()) {
+                                        Log.w("CustomWebView", "RecruitDetail 라우트인데 필요한 파라미터가 없음 → 웹뷰로 처리")
+                                        return super.shouldOverrideUrlLoading(view, request)
+                                    }
 
-                                is AllDestination.PetitionDetail -> {
-                                    navController.navigate(dynamicDestination.createRoute(queryId))
+                                    navController.navigate(dynamicDestination.createRoute(id, name))
                                 }
-
                                 else -> {
-                                    Log.w(
-                                        "CustomWebView",
-                                        "Unknown dynamic destination: $dynamicDestination"
-                                    )
+                                    // 다른 모든 동적 라우트는 id 파라미터만 사용
+                                    if (queryId.isNullOrEmpty()) {
+                                        Log.w("CustomWebView", "동적 라우트인데 id가 없음 → 웹뷰로 처리")
+                                        return super.shouldOverrideUrlLoading(view, request)
+                                    }
+
+                                    // 각 목적지 타입에 맞는 createRoute 메서드 호출
+                                    val route = when (dynamicDestination) {
+                                        is AllDestination.PostDetail -> dynamicDestination.createRoute(queryId)
+                                        is AllDestination.CouncilNoticeDetail -> dynamicDestination.createRoute(queryId)
+                                        is AllDestination.PetitionDetail -> dynamicDestination.createRoute(queryId)
+                                        else -> {
+                                            Log.w("CustomWebView", "Unknown dynamic destination: $dynamicDestination")
+                                            return super.shouldOverrideUrlLoading(view, request)
+                                        }
+                                    }
+
+                                    navController.navigate(route)
                                 }
                             }
                             return true
@@ -486,6 +496,7 @@ class AndroidBridge(
 private val dynamicRoutesMap: Map<String, AllDestination> = mapOf(
     "/postdetail" to AllDestination.PostDetail,
     "/councilnoticedetail" to AllDestination.CouncilNoticeDetail,
-    "/petitiondetail" to AllDestination.PetitionDetail
+    "/petitiondetail" to AllDestination.PetitionDetail,
+    "/home/recruitdetail" to AllDestination.RecruitDetail
     // 필요 시 더 추가
 )

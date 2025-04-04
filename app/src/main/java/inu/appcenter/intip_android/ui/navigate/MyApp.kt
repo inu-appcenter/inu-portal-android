@@ -156,5 +156,22 @@ fun MyApp(authViewModel: AuthViewModel, modifier: Modifier = Modifier) {
                 isShowBottomBar = false
             )
         }
+
+        composable(
+            route = AllDestination.RecruitDetail.routePattern,
+            arguments = listOf(
+                navArgument("id") { type = NavType.StringType },
+                navArgument("name") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val id = backStackEntry.arguments?.getString("id") ?: ""
+            val name = backStackEntry.arguments?.getString("name") ?: ""
+            WebViewScreen(
+                navController = navController,
+                path = "${AllDestination.RecruitDetail.webPath}?id=$id&name=$name",
+                authViewModel = authViewModel,
+                isShowBottomBar = false
+            )
+        }
     }
 }
