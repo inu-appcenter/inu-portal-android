@@ -63,7 +63,7 @@ private fun Context.showNotification(title: String, body: String) {
         .setContentText(body)
         .setAutoCancel(true)
         .setContentIntent(pending)
-        .setPriority(NotificationCompat.PRIORITY_HIGH) // foreground 중에도 보이려면 HIGH
+        .setPriority(NotificationCompat.PRIORITY_MAX)
         .build()
 
     // 4) 뿌리기

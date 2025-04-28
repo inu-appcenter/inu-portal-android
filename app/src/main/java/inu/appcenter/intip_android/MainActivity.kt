@@ -2,6 +2,7 @@ package inu.appcenter.intip_android
 
 import android.content.pm.PackageManager
 import android.os.Build
+import android.Manifest
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -45,8 +46,16 @@ class MainActivity : ComponentActivity() {
     override fun onStart() {
         super.onStart()
 
+        requestNotificationPermission()
         getFCMToken()
+    }
 
+    private fun requestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) { // Android 13 이상
+            if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 1001)
+            }
+        }
     }
 
     private fun getFCMToken() {
