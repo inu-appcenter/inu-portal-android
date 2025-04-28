@@ -18,11 +18,11 @@ import inu.appcenter.intip_android.ui.theme.INTIPTheme
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class MainActivity : ComponentActivity() {
+    private val authViewModel : AuthViewModel by viewModel()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            val authViewModel : AuthViewModel by viewModel()
 
             val view = LocalView.current
 
@@ -60,6 +60,7 @@ class MainActivity : ComponentActivity() {
 
                 val token = task.result
                 Log.d("FCM", "FCM token: $token")
+                authViewModel.updateFCMToken(token)
             }
     }
 }
