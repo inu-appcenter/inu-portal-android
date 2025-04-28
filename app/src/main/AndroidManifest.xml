@@ -18,8 +18,7 @@
         android:theme="@style/Theme.INTIP"
         tools:targetApi="31" >
         <service
-            android:name=".FirebaseMessageService"
-            android:enabled="false"
+            android:name=".MyFirebaseMessageService"
             android:exported="true" >
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />

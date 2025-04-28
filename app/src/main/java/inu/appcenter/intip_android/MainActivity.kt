@@ -49,7 +49,6 @@ class MainActivity : ComponentActivity() {
 
     }
 
-
     private fun getFCMToken() {
         FirebaseMessaging.getInstance().token
             .addOnCompleteListener { task ->
