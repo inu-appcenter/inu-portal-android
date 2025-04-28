@@ -8,6 +8,7 @@ coilSvg = "2.4.0"
 converterGson = "2.11.0"
 datastorePreferences = "1.1.2"
 desugar_jdk_libs = "2.1.4"
+firebaseBom = "33.13.0"
 gson = "2.10.1"
 koinAndroid = "3.4.3"
 koinAndroidxCompose = "3.4.3"
@@ -37,6 +38,9 @@ coil-svg = { module = "io.coil-kt:coil-svg", version.ref = "coilCompose" }
 coil-svg-v240 = { module = "io.coil-kt:coil-svg", version.ref = "coilSvg" }
 converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "converterGson" }
 desugar_jdk_libs = { module = "com.android.tools:desugar_jdk_libs", version.ref = "desugar_jdk_libs" }
+firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics" }
+firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
+firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
