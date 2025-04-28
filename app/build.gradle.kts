@@ -74,8 +74,8 @@ android {
 
 dependencies {
     //Firebase
-    implementation(libs.firebase.bom)
     implementation(libs.firebase.analytics)
+    implementation(platform("com.google.firebase:firebase-bom:32.4.1"))
     implementation(libs.firebase.crashlytics)
 
     implementation(libs.androidx.core.ktx)

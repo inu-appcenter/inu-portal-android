@@ -17,6 +17,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+//        throw Exception("잘 되니?")
         setContent {
             val authViewModel : AuthViewModel by viewModel()
 
