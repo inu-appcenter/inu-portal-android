@@ -250,4 +250,13 @@ class AuthViewModel(
         val matchResult = regex.find(message)
         return matchResult?.groupValues?.get(1) ?: message
     }
+
+    fun updateFCMToken(token: String) {
+        viewModelScope.launch {
+            val res = memberRepository.updateFCMToken(token)
+            if(!res.isSuccessful) {
+                Log.e("AuthViewModel", "FCM 토큰 업데이트 실패")
+            }
+        }
+    }
 }

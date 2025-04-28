@@ -20,4 +20,5 @@ local.properties
 *.aar
 *.ap_
 *.aab
+/app/keystore.jks
 app/google-services.json

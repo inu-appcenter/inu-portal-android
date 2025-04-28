@@ -11,10 +11,18 @@ android {
 
     signingConfigs {
         create("release") {
-            storeFile = rootProject.file("keystore.jks")
-            storePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
-            keyAlias = "key0"
-            keyPassword = System.getenv("ANDROID_KEY_PASSWORD")
+            val storeFilePath =
+                project.findProperty("android.injected.signing.store.file")?.toString()
+                    ?: "app/keystore.jks"
+
+            storeFile = file("$rootDir/$storeFilePath")
+
+            storePassword =
+                project.findProperty("android.injected.signing.store.password")?.toString() ?: ""
+            keyAlias =
+                project.findProperty("android.injected.signing.key.alias")?.toString() ?: ""
+            keyPassword =
+                project.findProperty("android.injected.signing.key.password")?.toString() ?: ""
         }
     }
 
@@ -33,6 +41,7 @@ android {
 
     buildTypes {
         release {
+            signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = false
             isShrinkResources = false
             isPseudoLocalesEnabled = true
@@ -65,9 +74,9 @@ android {
 
 dependencies {
     //Firebase
-    implementation(platform("com.google.firebase:firebase-bom:32.0.0"))
-    implementation("com.google.firebase:firebase-analytics")
-    implementation("com.google.firebase:firebase-crashlytics")
+    implementation(libs.firebase.analytics)
+    implementation(platform("com.google.firebase:firebase-bom:32.4.1"))
+    implementation(libs.firebase.crashlytics)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -78,6 +87,7 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.espresso.core)
+    implementation(libs.firebase.messaging.ktx)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

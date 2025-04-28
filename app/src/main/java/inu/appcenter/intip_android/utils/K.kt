@@ -12,6 +12,8 @@ object K {
     const val LOGIN = "/api/members/login"
     const val REFRESH = "/api/members/refresh"
 
+    const val FCM_TOKEN_UPDATE = "/api/tokens"
+
     // DataStore Keys
     const val DATASTORE_NAME = "user_prefs"
     const val ACCESS_TOKEN = "access_token_key"
