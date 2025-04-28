@@ -1,6 +1,9 @@
 package inu.appcenter.intip_android
 
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -8,6 +11,7 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import com.google.firebase.messaging.FirebaseMessaging
 import inu.appcenter.intip_android.ui.login.AuthViewModel
 import inu.appcenter.intip_android.ui.navigate.MyApp
 import inu.appcenter.intip_android.ui.theme.INTIPTheme
@@ -17,7 +21,6 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-//        throw Exception("잘 되니?")
         setContent {
             val authViewModel : AuthViewModel by viewModel()
 
@@ -37,6 +40,27 @@ class MainActivity : ComponentActivity() {
                 MyApp(authViewModel = authViewModel)
             }
         }
+    }
+
+    override fun onStart() {
+        super.onStart()
+
+        getFCMToken()
+
+    }
+
+
+    private fun getFCMToken() {
+        FirebaseMessaging.getInstance().token
+            .addOnCompleteListener { task ->
+                if (!task.isSuccessful) {
+                    Log.w("FCM", "Fetching FCM registration token failed", task.exception)
+                    return@addOnCompleteListener
+                }
+
+                val token = task.result
+                Log.d("FCM", "FCM token: $token")
+            }
     }
 }
 
