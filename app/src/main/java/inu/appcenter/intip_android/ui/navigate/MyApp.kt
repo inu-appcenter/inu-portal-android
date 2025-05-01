@@ -57,6 +57,7 @@ fun MyApp(authViewModel: AuthViewModel, modifier: Modifier = Modifier) {
                     navController.navigate(AllDestination.Home.route) {
                         popUpTo(AllDestination.Login.route) { inclusive = true }
                     }
+                    authViewModel.getFCMToken()
                 },
                 onOpenUrl = { url ->
                     val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))

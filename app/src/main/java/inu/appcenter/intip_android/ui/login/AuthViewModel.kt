@@ -3,6 +3,7 @@ package inu.appcenter.intip_android.ui.login
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.messaging.FirebaseMessaging
 import inu.appcenter.intip_android.local.DataStoreManager
 import inu.appcenter.intip_android.model.member.LoginDto
 import inu.appcenter.intip_android.repository.member.MemberRepository
@@ -251,12 +252,33 @@ class AuthViewModel(
         return matchResult?.groupValues?.get(1) ?: message
     }
 
-    fun updateFCMToken(token: String) {
-        viewModelScope.launch {
-            val res = memberRepository.updateFCMToken(token)
-            if(!res.isSuccessful) {
-                Log.e("AuthViewModel", "FCM 토큰 업데이트 실패")
+    fun getFCMToken() {
+        FirebaseMessaging.getInstance().token
+            .addOnCompleteListener { task ->
+                if (!task.isSuccessful) {
+                    Log.w("FCM", "Fetching FCM registration token failed", task.exception)
+                    return@addOnCompleteListener
+                }
+
+                val token = task.result
+                Log.d("FCM", "FCM token: $token")
+
+                viewModelScope.launch {
+                    val res = memberRepository.updateFCMToken(token)
+                    if(!res.isSuccessful) {
+                        Log.e("AuthViewModel", "FCM 토큰 업데이트 실패")
+                    }
+                }
             }
-        }
+
+        FirebaseMessaging.getInstance().subscribeToTopic("notice")
+            .addOnCompleteListener { task ->
+                if(task.isSuccessful) {
+                    Log.d("FCM", "topics 구독 완료")
+                }
+                else {
+                    Log.e("FCM", "topics 구독 실패")
+                }
+            }
     }
 }

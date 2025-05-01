@@ -47,7 +47,7 @@ class MainActivity : ComponentActivity() {
         super.onStart()
 
         requestNotificationPermission()
-        getFCMToken()
+        authViewModel.getFCMToken()
     }
 
     private fun requestNotificationPermission() {
@@ -56,31 +56,6 @@ class MainActivity : ComponentActivity() {
                 requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 1001)
             }
         }
-    }
-
-    private fun getFCMToken() {
-        FirebaseMessaging.getInstance().token
-            .addOnCompleteListener { task ->
-                if (!task.isSuccessful) {
-                    Log.w("FCM", "Fetching FCM registration token failed", task.exception)
-                    return@addOnCompleteListener
-                }
-
-                val token = task.result
-                Log.d("FCM", "FCM token: $token")
-                authViewModel.updateFCMToken(token)
-
-            }
-
-        FirebaseMessaging.getInstance().subscribeToTopic("notice")
-            .addOnCompleteListener { task ->
-                if(task.isSuccessful) {
-                    Log.d("FCM", "topics 구독 완료")
-                }
-                else {
-                    Log.e("FCM", "topics 구독 실패")
-                }
-            }
     }
 }
 
