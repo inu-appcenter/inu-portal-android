@@ -69,6 +69,17 @@ class MainActivity : ComponentActivity() {
                 val token = task.result
                 Log.d("FCM", "FCM token: $token")
                 authViewModel.updateFCMToken(token)
+
+            }
+
+        FirebaseMessaging.getInstance().subscribeToTopic("notice")
+            .addOnCompleteListener { task ->
+                if(task.isSuccessful) {
+                    Log.d("FCM", "topics 구독 완료")
+                }
+                else {
+                    Log.e("FCM", "topics 구독 실패")
+                }
             }
     }
 }
