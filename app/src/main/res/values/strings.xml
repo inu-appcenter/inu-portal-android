@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">INTIP</string>
+    <string name="app_name">인팁</string>
     <!-- SplashScreen 관련 문자열 -->
     <string name="splash_logo_desc">Splash Logo</string>
     <!-- LoginScreen 관련 문자열 -->
