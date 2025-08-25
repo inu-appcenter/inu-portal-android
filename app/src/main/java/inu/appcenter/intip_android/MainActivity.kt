@@ -5,7 +5,11 @@ import android.os.Build
 import android.Manifest
 import android.os.Bundle
 import android.util.Log
+import android.webkit.WebChromeClient
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import androidx.activity.ComponentActivity
+import androidx.activity.addCallback
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.ui.platform.LocalView
@@ -19,27 +23,30 @@ import inu.appcenter.intip_android.ui.theme.INTIPTheme
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class MainActivity : ComponentActivity() {
+    private lateinit var webView: WebView
     private val authViewModel : AuthViewModel by viewModel()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        setContent {
+        setContentView(R.layout.activity_main)
 
-            val view = LocalView.current
+        webView = findViewById(R.id.web_main)
 
-            val insetsController = WindowCompat.getInsetsController(window, view)
+        with(webView.settings) {
+            javaScriptEnabled = true
+            domStorageEnabled = true
+            useWideViewPort = true
+            loadWithOverviewMode = true
+            builtInZoomControls = true
+            displayZoomControls = false
+        }
 
-            WindowCompat.setDecorFitsSystemWindows(window, true)
-            insetsController.apply {
-                hide(WindowInsetsCompat.Type.navigationBars())
-                systemBarsBehavior =
-                    WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-                isAppearanceLightStatusBars = true
-            }
+        webView.webViewClient = object : WebViewClient() {}
+        webView.webChromeClient = WebChromeClient()
+        webView.loadUrl("https://intip.inuappcenter.kr/m/home")
 
-            INTIPTheme {
-                MyApp(authViewModel = authViewModel)
-            }
+        onBackPressedDispatcher.addCallback(this) {
+            if (webView.canGoBack()) webView.goBack() else finish()
         }
     }
 
@@ -48,6 +55,24 @@ class MainActivity : ComponentActivity() {
 
         requestNotificationPermission()
         authViewModel.getFCMToken()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        webView.onPause()
+    }
+    override fun onResume() {
+        super.onResume()
+        webView.onResume()
+    }
+    override fun onDestroy() {
+        webView.apply {
+            loadUrl("about:blank")
+            stopLoading()
+            webChromeClient = null
+            destroy()
+        }
+        super.onDestroy()
     }
 
     private fun requestNotificationPermission() {
