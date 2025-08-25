@@ -43,7 +43,7 @@ class MainActivity : ComponentActivity() {
 
         webView.webViewClient = object : WebViewClient() {}
         webView.webChromeClient = WebChromeClient()
-        webView.loadUrl("https://intip.inuappcenter.kr/app")
+        webView.loadUrl("https://intip.inuappcenter.kr/m/home")
 
         onBackPressedDispatcher.addCallback(this) {
             if (webView.canGoBack()) webView.goBack() else finish()
