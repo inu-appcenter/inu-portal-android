@@ -3,11 +3,17 @@ package inu.appcenter.intip_android
 import android.content.pm.PackageManager
 import android.os.Build
 import android.Manifest
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
+import android.webkit.JsResult
+import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.activity.result.contract.ActivityResultContracts
+import android.content.Intent
+import android.app.Activity
 import androidx.activity.ComponentActivity
 import androidx.activity.addCallback
 import androidx.activity.compose.setContent
@@ -26,9 +32,20 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class MainActivity : ComponentActivity() {
     private lateinit var webView: WebView
-    private val authViewModel: AuthViewModel by viewModel()
-
     private var fcmToken : String = "";
+
+    private var filePathCallback: ValueCallback<Array<Uri>>? = null
+    private val fileChooserLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val data = result.data
+            val uris = data?.data?.let { arrayOf(it) } ?: WebChromeClient.FileChooserParams.parseResult(result.resultCode, data)
+            filePathCallback?.onReceiveValue(uris)
+            filePathCallback = null
+        } else {
+            filePathCallback?.onReceiveValue(null)
+            filePathCallback = null
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -65,7 +82,20 @@ class MainActivity : ComponentActivity() {
                 })
             }
         }
-        webView.webChromeClient = WebChromeClient()
+        webView.webChromeClient = object : WebChromeClient() {
+            override fun onShowFileChooser(
+                webView: WebView?,
+                callback: ValueCallback<Array<Uri>>?,
+                fileChooserParams: FileChooserParams?
+            ): Boolean {
+                filePathCallback = callback
+                val intent = Intent(Intent.ACTION_GET_CONTENT)
+                intent.addCategory(Intent.CATEGORY_OPENABLE)
+                intent.type = "*/*"
+                fileChooserLauncher.launch(intent)
+                return true
+            }
+        }
         webView.loadUrl("https://intip.inuappcenter.kr/m/home")
 
         onBackPressedDispatcher.addCallback(this) {
