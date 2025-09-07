@@ -14,6 +14,11 @@ import android.webkit.WebViewClient
 import androidx.activity.result.contract.ActivityResultContracts
 import android.content.Intent
 import android.app.Activity
+import android.app.DownloadManager
+import android.content.Context
+import android.os.Environment
+import android.webkit.DownloadListener
+import android.widget.Toast
 import android.webkit.WebResourceRequest
 import androidx.activity.ComponentActivity
 import androidx.activity.addCallback
@@ -118,6 +123,20 @@ class MainActivity : ComponentActivity() {
                 return true
             }
         }
+
+        webView.setDownloadListener { url, userAgent, contentDisposition, mimetype, contentLength ->
+            val request = DownloadManager.Request(Uri.parse(url))
+            val fileName = android.webkit.URLUtil.guessFileName(url, contentDisposition, mimetype)
+            request.apply {
+                setTitle(fileName)
+                setDescription("Downloading file...")
+                setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+                setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName)
+            }
+            val downloadManager = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+            downloadManager.enqueue(request)
+            Toast.makeText(this, "Downloading $fileName", Toast.LENGTH_SHORT).show()
+        }
         webView.loadUrl("https://intip.inuappcenter.kr/m/home")
 
         onBackPressedDispatcher.addCallback(this) {
@@ -128,7 +147,7 @@ class MainActivity : ComponentActivity() {
     override fun onStart() {
         super.onStart()
 
-        requestNotificationPermission()
+        requestRequiredPermissions()
     }
 
     override fun onPause() {
@@ -151,10 +170,16 @@ class MainActivity : ComponentActivity() {
         super.onDestroy()
     }
 
-    private fun requestNotificationPermission() {
+    private fun requestRequiredPermissions() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) { // Android 13 이상
             if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
                 requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 1001)
+            }
+        }
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE), 1002)
             }
         }
     }
