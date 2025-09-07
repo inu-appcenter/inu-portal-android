@@ -14,6 +14,7 @@ import android.webkit.WebViewClient
 import androidx.activity.result.contract.ActivityResultContracts
 import android.content.Intent
 import android.app.Activity
+import android.webkit.WebResourceRequest
 import androidx.activity.ComponentActivity
 import androidx.activity.addCallback
 import androidx.activity.compose.setContent
@@ -70,6 +71,19 @@ class MainActivity : ComponentActivity() {
         }
         webView.addJavascriptInterface(WebAppInterface(this), "AndroidBridge")
         webView.webViewClient = object : WebViewClient() {
+            override fun shouldOverrideUrlLoading(
+                view: WebView?,
+                request: WebResourceRequest?
+            ): Boolean {
+                val url = request?.url
+                if(url != null) {
+                    val intent = Intent(Intent.ACTION_VIEW, url)
+                    startActivity(intent)
+                    return true
+                }
+
+                return super.shouldOverrideUrlLoading(view, request)
+            }
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
 
