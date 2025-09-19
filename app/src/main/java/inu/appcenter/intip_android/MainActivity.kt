@@ -38,23 +38,27 @@ import inu.appcenter.intip_android.ui.theme.INTIPTheme
 import inu.appcenter.intip_android.utils.FcmTokenHolder
 import inu.appcenter.intip_android.utils.WebAppInterface
 import org.koin.androidx.viewmodel.ext.android.viewModel
+import java.time.LocalTime
 
 class MainActivity : ComponentActivity() {
     private lateinit var webView: WebView
-    private var fcmToken : String = "";
+    private var fcmToken: String = "";
+    private var last_back_time: Int? = null;
 
     private var filePathCallback: ValueCallback<Array<Uri>>? = null
-    private val fileChooserLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == RESULT_OK) {
-            val data = result.data
-            val uris = data?.data?.let { arrayOf(it) } ?: WebChromeClient.FileChooserParams.parseResult(result.resultCode, data)
-            filePathCallback?.onReceiveValue(uris)
-            filePathCallback = null
-        } else {
-            filePathCallback?.onReceiveValue(null)
-            filePathCallback = null
+    private val fileChooserLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == RESULT_OK) {
+                val data = result.data
+                val uris = data?.data?.let { arrayOf(it) }
+                    ?: WebChromeClient.FileChooserParams.parseResult(result.resultCode, data)
+                filePathCallback?.onReceiveValue(uris)
+                filePathCallback = null
+            } else {
+                filePathCallback?.onReceiveValue(null)
+                filePathCallback = null
+            }
         }
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
@@ -92,7 +96,7 @@ class MainActivity : ComponentActivity() {
                 request: WebResourceRequest?
             ): Boolean {
                 val url = request?.url
-                if(url != null) {
+                if (url != null) {
                     val intent = Intent(Intent.ACTION_VIEW, url)
                     startActivity(intent)
                     return true
@@ -100,6 +104,7 @@ class MainActivity : ComponentActivity() {
 
                 return super.shouldOverrideUrlLoading(view, request)
             }
+
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
 
@@ -145,7 +150,18 @@ class MainActivity : ComponentActivity() {
         onBackPressedDispatcher.addCallback(this) {
             val homeUrl = "https://intip.inuappcenter.kr/m/home"
             if (webView.url == homeUrl) {
-                finish()
+                val current_time = LocalTime.now().second
+
+                if (last_back_time == null || current_time - last_back_time!! > 3) {
+                    Toast
+                        .makeText(this@MainActivity, "다시 뒤로가기 하면 종료됩니다.", Toast.LENGTH_SHORT)
+                        .show()
+                    last_back_time = current_time
+                }
+                else {
+                    finish()
+                }
+
             } else if (webView.canGoBack()) {
                 webView.goBack()
             } else {
