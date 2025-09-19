@@ -17,7 +17,9 @@ import android.app.Activity
 import android.app.DownloadManager
 import android.content.Context
 import android.os.Environment
+import android.view.View
 import android.webkit.DownloadListener
+import android.webkit.URLUtil
 import android.widget.Toast
 import android.webkit.WebResourceRequest
 import androidx.activity.ComponentActivity
@@ -25,6 +27,7 @@ import androidx.activity.addCallback
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.ui.platform.LocalView
+import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -42,7 +45,7 @@ class MainActivity : ComponentActivity() {
 
     private var filePathCallback: ValueCallback<Array<Uri>>? = null
     private val fileChooserLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
+        if (result.resultCode == RESULT_OK) {
             val data = result.data
             val uris = data?.data?.let { arrayOf(it) } ?: WebChromeClient.FileChooserParams.parseResult(result.resultCode, data)
             filePathCallback?.onReceiveValue(uris)
@@ -58,9 +61,9 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val rootView = findViewById<android.view.View>(R.id.main)
-        androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(rootView) { view, insets ->
-            val systemBars = insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.systemBars())
+        val rootView = findViewById<View>(R.id.main)
+        ViewCompat.setOnApplyWindowInsetsListener(rootView) { view, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             view.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
@@ -126,21 +129,40 @@ class MainActivity : ComponentActivity() {
 
         webView.setDownloadListener { url, userAgent, contentDisposition, mimetype, contentLength ->
             val request = DownloadManager.Request(Uri.parse(url))
-            val fileName = android.webkit.URLUtil.guessFileName(url, contentDisposition, mimetype)
+            val fileName = URLUtil.guessFileName(url, contentDisposition, mimetype)
             request.apply {
                 setTitle(fileName)
                 setDescription("Downloading file...")
                 setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
                 setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName)
             }
-            val downloadManager = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+            val downloadManager = getSystemService(DOWNLOAD_SERVICE) as DownloadManager
             downloadManager.enqueue(request)
             Toast.makeText(this, "Downloading $fileName", Toast.LENGTH_SHORT).show()
         }
-        webView.loadUrl("https://intip.inuappcenter.kr/m/home")
+        handleIntent(intent)
 
         onBackPressedDispatcher.addCallback(this) {
             if (webView.canGoBack()) webView.goBack() else finish()
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleIntent(intent)
+    }
+
+    private fun handleIntent(intent: Intent?) {
+        val destination = intent?.getStringExtra("destination")
+        Log.d("destination", destination.toString())
+
+        if (destination != null) {
+            webView.loadUrl(destination)
+        } else {
+            if (webView.url == null) {
+                webView.loadUrl("https://intip.inuappcenter.kr/m/home")
+            }
         }
     }
 
@@ -148,6 +170,11 @@ class MainActivity : ComponentActivity() {
         super.onStart()
 
         requestRequiredPermissions()
+        showNotification(
+            title = "테에스트",
+            body = "입니다",
+            destination = "https://intip.inuappcenter.kr/m/bus/info"
+        )
     }
 
     override fun onPause() {

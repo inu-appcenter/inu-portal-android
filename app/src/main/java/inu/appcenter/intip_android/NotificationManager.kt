@@ -29,11 +29,12 @@ fun createChannel(context: Context) {
     }
 }
 
-fun Context.showNotification(title: String, body: String) {
+fun Context.showNotification(title: String, body: String, destination: String? = null) {
     createChannel(this)
 
     val intent = Intent(this, MainActivity::class.java).apply {
         flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        destination?.let { putExtra("destination", it) }
     }
     val pending = PendingIntent.getActivity(
         this, 0, intent,

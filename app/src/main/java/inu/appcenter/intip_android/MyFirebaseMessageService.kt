@@ -10,11 +10,12 @@ class MyFirebaseMessageService : FirebaseMessagingService() {
 
         val title = message.notification?.title
         val body  = message.notification?.body
+        val path = message.data["path"]
 
-        Log.i("FCM", "onMessageReceived: $title, $body")
+        Log.i("FCM", "onMessageReceived: $title, $body, $path")
 
         if(title != null && body != null) {
-            this.showNotification(title, body)
+            this.showNotification(title, body, "https://intip.inuappcenter.kr/m${path ?: "/alert"}")
         }
     }
 }
