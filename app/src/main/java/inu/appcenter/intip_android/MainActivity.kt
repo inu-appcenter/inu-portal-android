@@ -46,6 +46,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var webView: WebView
     private var fcmToken: String = "";
     private var last_back_time: Int? = null;
+    private lateinit var swipeRefreshLayout: androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 
     private var filePathCallback: ValueCallback<Array<Uri>>? = null
     private val fileChooserLauncher =
@@ -67,7 +68,12 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val rootView = findViewById<View>(R.id.main)
+        swipeRefreshLayout = findViewById(R.id.swipe_refresh_layout)
+        swipeRefreshLayout.setOnRefreshListener {
+            webView.reload()
+        }
+
+        val rootView = findViewById<View>(R.id.web_main)
         ViewCompat.setOnApplyWindowInsetsListener(rootView) { view, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             view.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
@@ -120,6 +126,7 @@ class MainActivity : ComponentActivity() {
 
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
+                swipeRefreshLayout.isRefreshing = false
 
                 webView.evaluateJavascript(
                     "window.onReceiveFcmToken && window.onReceiveFcmToken('$fcmToken');",
