@@ -143,7 +143,14 @@ class MainActivity : ComponentActivity() {
         handleIntent(intent)
 
         onBackPressedDispatcher.addCallback(this) {
-            if (webView.canGoBack()) webView.goBack() else finish()
+            val homeUrl = "https://intip.inuappcenter.kr/m/home"
+            if (webView.url == homeUrl) {
+                finish()
+            } else if (webView.canGoBack()) {
+                webView.goBack()
+            } else {
+                finish()
+            }
         }
     }
 
@@ -170,11 +177,6 @@ class MainActivity : ComponentActivity() {
         super.onStart()
 
         requestRequiredPermissions()
-        showNotification(
-            title = "테에스트",
-            body = "입니다",
-            destination = "https://intip.inuappcenter.kr/m/bus/info"
-        )
     }
 
     override fun onPause() {
