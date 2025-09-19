@@ -4,11 +4,13 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.Manifest
 import android.net.Uri
+import android.content.res.Configuration
 import android.os.Bundle
 import android.util.Log
 import android.webkit.JsResult
 import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.result.contract.ActivityResultContracts
@@ -89,7 +91,18 @@ class MainActivity : ComponentActivity() {
             builtInZoomControls = true
             displayZoomControls = false
         }
-        webView.addJavascriptInterface(WebAppInterface(this), "AndroidBridge")
+        val windowInsetsController = WindowCompat.getInsetsController(window, window.decorView)
+        val isSystemInDarkTheme = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
+        windowInsetsController.isAppearanceLightStatusBars = !isSystemInDarkTheme
+
+        webView.addJavascriptInterface(
+            WebAppInterface(this) { isDarkMode ->
+                runOnUiThread {
+                    windowInsetsController.isAppearanceLightStatusBars = !isDarkMode
+                }
+            },
+            "AndroidBridge"
+        )
         webView.webViewClient = object : WebViewClient() {
             override fun shouldOverrideUrlLoading(
                 view: WebView?,
@@ -118,6 +131,25 @@ class MainActivity : ComponentActivity() {
             }
         }
         webView.webChromeClient = object : WebChromeClient() {
+            override fun onJsAlert(
+                view: WebView?,
+                url: String?,
+                message: String?,
+                result: JsResult?
+            ): Boolean {
+                MaterialAlertDialogBuilder(this@MainActivity)
+                    .setMessage(message)
+                    .setPositiveButton(android.R.string.ok) { _, _ ->
+                        result?.confirm()
+                    }
+                    .setOnCancelListener {
+                        result?.cancel()
+                    }
+                    .create()
+                    .show()
+                return true
+            }
+
             override fun onShowFileChooser(
                 webView: WebView?,
                 callback: ValueCallback<Array<Uri>>?,
@@ -193,6 +225,11 @@ class MainActivity : ComponentActivity() {
         super.onStart()
 
         requestRequiredPermissions()
+//        showNotification(
+//            title = "테스트",
+//            body = "입니다",
+//            destination = "/m/login"
+//        )
     }
 
     override fun onPause() {

@@ -20,7 +20,7 @@ fun createChannel(context: Context) {
         val channel = NotificationChannel(
             CHANNEL_ID,
             "일반 알림",
-            NotificationManager.IMPORTANCE_DEFAULT
+            NotificationManager.IMPORTANCE_HIGH
         ).apply {
             description = "앱에서 오는 기본 알림"
         }

@@ -19,6 +19,9 @@ import inu.appcenter.intip_android.ui.login.AuthViewModel
 import inu.appcenter.intip_android.utils.K
 import kotlinx.coroutines.delay
 
+import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.background
+
 @Composable
 fun SplashScreen(
     onSplashComplete: () -> Unit,
@@ -41,7 +44,7 @@ fun SplashScreen(
 
     // 스플래시 화면 UI
     Box(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize().background(Color.White),
         contentAlignment = Alignment.Center
     ) {
         // SVG 로고 이미지 로드 및 표시

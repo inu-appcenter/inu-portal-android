@@ -4,7 +4,16 @@ import android.content.Context
 import android.util.Log
 import android.webkit.JavascriptInterface
 
-class WebAppInterface(private val context: Context) {
+class WebAppInterface(
+    private val context: Context,
+    private val onThemeChanged: (Boolean) -> Unit
+) {
+
+    @JavascriptInterface
+    fun setDarkMode(isDarkMode: Boolean) {
+        Log.d("WebAppInterface", "setDarkMode() called from web with isDarkMode: $isDarkMode")
+        onThemeChanged(isDarkMode)
+    }
 
     /**
      * Web에서 FCM 토큰을 요청할 때 호출됩니다.
