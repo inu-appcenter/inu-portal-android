@@ -77,6 +77,7 @@ dependencies {
     implementation(libs.firebase.analytics)
     implementation(platform("com.google.firebase:firebase-bom:32.4.1"))
     implementation(libs.firebase.crashlytics)
+    implementation("androidx.core:core-splashscreen:1.0.1")
     implementation(libs.androidx.swiperefreshlayout)
 
     implementation(libs.androidx.core.ktx)

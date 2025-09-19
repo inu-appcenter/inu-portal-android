@@ -73,7 +73,7 @@ class MainActivity : ComponentActivity() {
             webView.reload()
         }
 
-        val rootView = findViewById<View>(R.id.web_main)
+        val rootView = findViewById<View>(R.id.swipe_refresh_layout)
         ViewCompat.setOnApplyWindowInsetsListener(rootView) { view, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             view.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
