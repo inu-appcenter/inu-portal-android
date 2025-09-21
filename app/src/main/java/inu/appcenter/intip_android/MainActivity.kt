@@ -24,6 +24,7 @@ import android.webkit.DownloadListener
 import android.webkit.URLUtil
 import android.widget.Toast
 import android.webkit.WebResourceRequest
+import android.widget.LinearLayout
 import androidx.activity.ComponentActivity
 import androidx.activity.addCallback
 import androidx.activity.compose.setContent
@@ -69,11 +70,13 @@ class MainActivity : ComponentActivity() {
         setContentView(R.layout.activity_main)
 
         swipeRefreshLayout = findViewById(R.id.swipe_refresh_layout)
+        swipeRefreshLayout.isEnabled = false
         swipeRefreshLayout.setOnRefreshListener {
             webView.reload()
         }
 
-        val rootView = findViewById<View>(R.id.swipe_refresh_layout)
+        val rootView = findViewById<androidx.swiperefreshlayout.widget.SwipeRefreshLayout>(R.id.swipe_refresh_layout)
+
         ViewCompat.setOnApplyWindowInsetsListener(rootView) { view, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             view.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
