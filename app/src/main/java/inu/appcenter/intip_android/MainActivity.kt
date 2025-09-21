@@ -49,6 +49,8 @@ class MainActivity : ComponentActivity() {
     private var last_back_time: Int? = null;
     private lateinit var swipeRefreshLayout: androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 
+    private val ALLOWED_HOSTS = setOf("intip.inuappcenter.kr")
+
     private var filePathCallback: ValueCallback<Array<Uri>>? = null
     private val fileChooserLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
@@ -75,7 +77,8 @@ class MainActivity : ComponentActivity() {
             webView.reload()
         }
 
-        val rootView = findViewById<androidx.swiperefreshlayout.widget.SwipeRefreshLayout>(R.id.swipe_refresh_layout)
+        val rootView =
+            findViewById<androidx.swiperefreshlayout.widget.SwipeRefreshLayout>(R.id.swipe_refresh_layout)
 
         ViewCompat.setOnApplyWindowInsetsListener(rootView) { view, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
@@ -101,7 +104,8 @@ class MainActivity : ComponentActivity() {
             displayZoomControls = false
         }
         val windowInsetsController = WindowCompat.getInsetsController(window, window.decorView)
-        val isSystemInDarkTheme = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
+        val isSystemInDarkTheme =
+            resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
         windowInsetsController.isAppearanceLightStatusBars = !isSystemInDarkTheme
 
         webView.addJavascriptInterface(
@@ -199,8 +203,7 @@ class MainActivity : ComponentActivity() {
                         .makeText(this@MainActivity, "다시 뒤로가기 하면 종료됩니다.", Toast.LENGTH_SHORT)
                         .show()
                     last_back_time = current_time
-                }
-                else {
+                } else {
                     finish()
                 }
 
@@ -219,15 +222,27 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun handleIntent(intent: Intent?) {
-        val destination = intent?.getStringExtra("destination")
-        Log.d("destination", destination.toString())
+        val dest = intent?.getStringExtra("destination")
+        val uri = runCatching { Uri.parse(dest) }.getOrNull()
 
-        if (destination != null) {
-            webView.loadUrl(destination)
+        if (uri != null && isSafe(uri)) {
+            webView.loadUrl(uri.toString())
         } else {
-            if (webView.url == null) {
-                webView.loadUrl("https://intip.inuappcenter.kr/m/home")
-            }
+            loadDefault()
+        }
+    }
+
+    private fun isSafe(uri: Uri): Boolean {
+        if (uri.scheme != "https")
+            return false
+        if (uri.host !in ALLOWED_HOSTS)
+            return false
+        return true
+    }
+
+    private fun loadDefault() {
+        if (webView.url == null) {
+            webView.loadUrl("https://intip.inuappcenter.kr/m/home")
         }
     }
 
