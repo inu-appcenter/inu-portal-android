@@ -1,0 +1,22 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <style name="Base.Theme.INTIP" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/intip_color</item>
+
+        <item name="android:statusBarColor">@android:color/black</item>
+        <item name="android:windowLightStatusBar">false</item>
+
+        <item name="android:alertDialogTheme">@style/Theme.INTIP.Dialog</item>
+    </style>
+
+    <style name="Theme.INTIP" parent="Base.Theme.INTIP" />
+
+    <style name="Theme.INTIP.Dialog" parent="android:Theme.DeviceDefault.Dialog.Alert">
+        <item name="android:buttonBarPositiveButtonStyle">@style/INTIP.Dialog.Button</item>
+        <item name="android:buttonBarNegativeButtonStyle">@style/INTIP.Dialog.Button</item>
+        <item name="android:buttonBarNeutralButtonStyle">@style/INTIP.Dialog.Button</item>
+    </style>
+
+    <style name="INTIP.Dialog.Button" parent="android:style/Widget.DeviceDefault.Button.Borderless">
+        <item name="android:textColor">?android:attr/textColorPrimary</item>
+    </style>
+</resources>
