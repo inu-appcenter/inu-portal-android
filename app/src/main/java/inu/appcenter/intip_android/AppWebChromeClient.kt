@@ -3,6 +3,7 @@ package inu.appcenter.intip_android
 import android.app.AlertDialog
 import android.content.Context
 import android.net.Uri
+import android.webkit.GeolocationPermissions
 import android.webkit.JsResult
 import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
@@ -12,6 +13,13 @@ class AppWebChromeClient(
     private val context: Context,
     private val onShowFileChooserCallback: (ValueCallback<Array<Uri>>?, FileChooserParams?) -> Boolean
 ) : WebChromeClient() {
+
+    override fun onGeolocationPermissionsShowPrompt(
+        origin: String?,
+        callback: GeolocationPermissions.Callback?
+    ) {
+        callback?.invoke(origin, true, false)
+    }
 
     override fun onJsAlert(view: WebView?, url: String?, message: String?, result: JsResult?): Boolean {
         AlertDialog.Builder(context)
