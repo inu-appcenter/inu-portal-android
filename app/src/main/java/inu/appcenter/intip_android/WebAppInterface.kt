@@ -8,7 +8,7 @@ class WebAppInterface(
 ) {
     @JavascriptInterface
     fun onRouteChange(path: String) {
-        Log.d("RouteChange", "경로 변�? $path")
+        Log.d("RouteChange", "경로 변경 $path")
     }
 
     @JavascriptInterface

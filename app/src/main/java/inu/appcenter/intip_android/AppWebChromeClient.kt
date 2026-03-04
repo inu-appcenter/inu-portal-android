@@ -16,7 +16,7 @@ class AppWebChromeClient(
     override fun onJsAlert(view: WebView?, url: String?, message: String?, result: JsResult?): Boolean {
         AlertDialog.Builder(context)
             .setMessage(message)
-            .setPositiveButton("?�인") { _, _ -> result?.confirm() }
+            .setPositiveButton("확인") { _, _ -> result?.confirm() }
             .setCancelable(false)
             .show()
         return true
@@ -25,7 +25,7 @@ class AppWebChromeClient(
     override fun onJsConfirm(view: WebView?, url: String?, message: String?, result: JsResult?): Boolean {
         AlertDialog.Builder(context)
             .setMessage(message)
-            .setPositiveButton("?�인") { _, _ -> result?.confirm() }
+            .setPositiveButton("확인") { _, _ -> result?.confirm() }
             .setNegativeButton("취소") { _, _ -> result?.cancel() }
             .setCancelable(false)
             .show()

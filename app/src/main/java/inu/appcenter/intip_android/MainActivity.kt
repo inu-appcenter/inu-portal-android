@@ -12,6 +12,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.view.PixelCopy
 import android.view.View
 import android.view.ViewOutlineProvider
@@ -67,11 +68,13 @@ class MainActivity : AppCompatActivity() {
         handleFileSelection(uris)
     }
 
-    private val permissionLauncher = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { results ->
-        results.filterValues { !it }.keys.forEach { permission ->
-            showToast("$permission 권한 거부됨")
+    private val permissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { results ->
+
+            results.filterValues { !it }.keys.forEach { permission ->
+                Log.d("Permission", "$permission 권한이 거부되었습니다.")
+            }
         }
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()

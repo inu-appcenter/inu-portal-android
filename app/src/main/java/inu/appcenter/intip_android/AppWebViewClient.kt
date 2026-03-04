@@ -26,7 +26,7 @@ class AppWebViewClient(
     override fun onPageFinished(view: WebView?, url: String?) {
         super.onPageFinished(view, url)
 
-        // FCM ?�큰 주입
+        // FCM ?�큰 주입
         FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
             if (task.isSuccessful) {
                 view?.evaluateJavascript("window.onReceiveFcmToken && window.onReceiveFcmToken('${task.result}');", null)
@@ -53,13 +53,13 @@ class AppWebViewClient(
     override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
         val url = request?.url.toString()
 
-        // 1. ?��? ?�메???�용
+        // 1. ?��? ?�메???�용
         if (Constants.ALLOWED_DOMAINS.any { url.startsWith(it) }) {
             onPageStartedCallback?.invoke(url)
             return false
         }
 
-        // 2. ?��? ???�키�?처리
+        // 2. ?��? ???�키�?처리
         return handleExternalScheme(url, view)
     }
 
@@ -82,12 +82,12 @@ class AppWebViewClient(
             }
         }
 
-        // 3. ?�반 ?��? 링크
+        // 3. ?�반 ?��? 링크
         return try {
             context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
             true
         } catch (e: Exception) {
-            Toast.makeText(context, "?��? 링크 ?�기 ?�패", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "외부 링크 열기 실패", Toast.LENGTH_SHORT).show()
             true
         }
     }
@@ -105,7 +105,7 @@ class AppWebViewClient(
             return true
         }
 
-        Toast.makeText(context, "관???�이 ?�치?�어 ?��? ?�습?�다.", Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, "관련 앱이 설치되어있지 않습니다.", Toast.LENGTH_SHORT).show()
         return true
     }
 }
