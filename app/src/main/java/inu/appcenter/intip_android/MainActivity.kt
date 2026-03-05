@@ -3,6 +3,9 @@ package inu.appcenter.intip_android
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.AlertDialog
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Canvas
@@ -29,6 +32,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.google.firebase.FirebaseApp
+import com.google.firebase.messaging.FirebaseMessaging
 
 class MainActivity : AppCompatActivity() {
 
@@ -84,11 +88,59 @@ class MainActivity : AppCompatActivity() {
 
         splashScreen.setKeepOnScreenCondition { !isReady }
 
+        createNotificationChannel()
         setupViews()
         setupWebView()
         setupBackPressHandler()
         checkAndRequestPermissions()
-        loadInitialPage()
+        handleIntent(intent)
+        logFcmToken()
+    }
+
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val name = "일반 알림"
+            val descriptionText = "앱의 기본적인 알림을 수신합니다."
+            val importance = NotificationManager.IMPORTANCE_HIGH
+            val channel = NotificationChannel("fcm_default_channel", name, importance).apply {
+                description = descriptionText
+                enableLights(true)
+                enableVibration(true)
+            }
+            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(channel)
+        }
+    }
+
+    private fun logFcmToken() {
+        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+            if (!task.isSuccessful) {
+                Log.w("FCM_TOKEN", "Fetching FCM registration token failed", task.exception)
+                return@addOnCompleteListener
+            }
+            val token = task.result
+            Log.d("FCM_TOKEN", "Current token: $token")
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleIntent(intent)
+    }
+
+    private fun handleIntent(intent: Intent) {
+        val targetPath = intent.getStringExtra("TARGET_PATH")
+        if (targetPath != null) {
+            val url = if (targetPath.startsWith("http")) {
+                targetPath
+            } else {
+                Constants.BASE_URL + if (targetPath.startsWith("/")) targetPath else "/$targetPath"
+            }
+            webView.loadUrl(url)
+        } else if (webView.url == null) {
+            loadInitialPage()
+        }
     }
 
     private fun setupViews() {
