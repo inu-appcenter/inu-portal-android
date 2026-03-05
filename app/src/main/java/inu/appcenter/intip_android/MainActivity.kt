@@ -30,9 +30,11 @@ import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.google.firebase.FirebaseApp
 import com.google.firebase.messaging.FirebaseMessaging
+import kotlin.math.abs
 
 class MainActivity : AppCompatActivity() {
 
@@ -44,6 +46,7 @@ class MainActivity : AppCompatActivity() {
     private var isScrolling = false
     private var isReady = false
     private var lastHistoryIndex = -1
+    private var isBackNavigating = false
 
     private lateinit var backPressCallback: OnBackPressedCallback
     private val networkHelper by lazy { NetworkHelper(this) }
@@ -55,12 +58,13 @@ class MainActivity : AppCompatActivity() {
         const val CAPTURE_DELAY = 300L
         const val BITMAP_SCALE = 1f
         const val ANIMATION_DURATION = 350L
+        const val MAX_BITMAP_CACHE_SIZE = 20
     }
 
     // 캡처 실행
     private val scrollCaptureRunnable = Runnable {
         if (!isScrolling && !isSwiping && isReady) {
-            captureCurrentStateSilently()
+            captureCurrentState(null, false)
         }
     }
 
@@ -81,6 +85,7 @@ class MainActivity : AppCompatActivity() {
         }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
         val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
         FirebaseApp.initializeApp(this)
@@ -95,6 +100,11 @@ class MainActivity : AppCompatActivity() {
         checkAndRequestPermissions()
         handleIntent(intent)
         logFcmToken()
+    }
+
+    override fun onConfigurationChanged(newConfig: android.content.res.Configuration) {
+        super.onConfigurationChanged(newConfig)
+        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
     }
 
     private fun createNotificationChannel() {
@@ -132,11 +142,7 @@ class MainActivity : AppCompatActivity() {
     private fun handleIntent(intent: Intent) {
         val targetPath = intent.getStringExtra("TARGET_PATH")
         if (targetPath != null) {
-            val url = if (targetPath.startsWith("http")) {
-                targetPath
-            } else {
-                Constants.BASE_URL + if (targetPath.startsWith("/")) targetPath else "/$targetPath"
-            }
+            val url = if (targetPath.startsWith("http")) targetPath else Constants.BASE_URL + if (targetPath.startsWith("/")) targetPath else "/$targetPath"
             webView.loadUrl(url)
         } else if (webView.url == null) {
             loadInitialPage()
@@ -152,7 +158,6 @@ class MainActivity : AppCompatActivity() {
     private fun setupWebView() {
         webView.apply {
             setBackgroundColor(android.graphics.Color.TRANSPARENT)
-            // 하드웨어 가속
             setLayerType(View.LAYER_TYPE_HARDWARE, null)
         }
 
@@ -165,17 +170,13 @@ class MainActivity : AppCompatActivity() {
             textZoom = 100
             mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
             userAgentString += Constants.USER_AGENT_SUFFIX
-            // 렌더링 최적화
             setRenderPriority(WebSettings.RenderPriority.HIGH)
             cacheMode = WebSettings.LOAD_DEFAULT
         }
 
-        // 스크롤 리스너
         webView.setOnScrollChangeListener { _, _, _, _, _ ->
             isScrolling = true
             webView.removeCallbacks(scrollCaptureRunnable)
-
-            // 스크롤 종료 감지
             webView.postDelayed({
                 isScrolling = false
                 if (isReady && !isSwiping) {
@@ -189,6 +190,9 @@ class MainActivity : AppCompatActivity() {
             onPageStartedCallback = { url ->
                 updateBackPressState(url)
                 webView.removeCallbacks(scrollCaptureRunnable)
+                if (!isSwiping && lastHistoryIndex != -1) {
+                    captureCurrentState(lastHistoryIndex, true)
+                }
                 if (isReady && !isSwiping) {
                     freezeCurrentScreen(url)
                     isReady = false
@@ -198,8 +202,14 @@ class MainActivity : AppCompatActivity() {
                 updateBackPressState(url)
                 playForwardAnimation()
                 isReady = true
-                // 로딩 후 지연 캡처
+                if (isBackNavigating) {
+                    webView.postDelayed({
+                        fadeOutPreviewImage()
+                        isBackNavigating = false
+                    }, 500) // 지연 시간을 주던 시점
+                }
                 webView.postDelayed(scrollCaptureRunnable, CAPTURE_DELAY)
+                lastHistoryIndex = webView.copyBackForwardList().currentIndex
             }
         )
 
@@ -216,12 +226,12 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun captureCurrentStateSilently() {
-        // 실행 조건 검사
-        if (isSwiping || isScrolling || !isReady || webView.width <= 0 || webView.height <= 0) return
+    private fun captureCurrentState(targetIndex: Int? = null, isSync: Boolean = false) {
+        if (webView.width <= 0 || webView.height <= 0 || isSwiping) return
+        if (!isSync && (!isReady || isScrolling)) return
 
         val list = webView.copyBackForwardList()
-        val indexToSave = list.currentIndex
+        val indexToSave = targetIndex ?: list.currentIndex
         if (indexToSave < 0) return
 
         try {
@@ -229,102 +239,79 @@ class MainActivity : AppCompatActivity() {
             val height = (webView.height * BITMAP_SCALE).toInt()
             val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565)
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                // 비동기 캡처
+            if (!isSync && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 val location = IntArray(2)
                 webView.getLocationInWindow(location)
-                val rect = Rect(
-                    location[0],
-                    location[1],
-                    location[0] + webView.width,
-                    location[1] + webView.height
-                )
+                val rect = Rect(location[0], location[1], location[0] + webView.width, location[1] + webView.height)
 
-                PixelCopy.request(
-                    window,
-                    rect,
-                    bitmap,
-                    { copyResult ->
-                        if (copyResult == PixelCopy.SUCCESS) {
-                            updateBitmapMap(indexToSave, bitmap)
-                        } else {
-                            bitmap.recycle()
-                        }
-                    },
-                    Handler(Looper.getMainLooper())
-                )
+                PixelCopy.request(window, rect, bitmap, { copyResult ->
+                    if (copyResult == PixelCopy.SUCCESS) updateBitmapMap(indexToSave, bitmap)
+                    else bitmap.recycle()
+                }, Handler(Looper.getMainLooper()))
             } else {
-                // 동기 캡처
                 val canvas = Canvas(bitmap)
                 canvas.scale(BITMAP_SCALE, BITMAP_SCALE)
                 canvas.translate(-webView.scrollX.toFloat(), -webView.scrollY.toFloat())
                 webView.draw(canvas)
-
                 updateBitmapMap(indexToSave, bitmap)
             }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+        } catch (e: Exception) { e.printStackTrace() }
     }
 
-    // 맵 갱신 및 메모리 정리
     private fun updateBitmapMap(indexToSave: Int, bitmap: Bitmap) {
-        bitmapMap[indexToSave]?.recycle()
+        val oldBitmap = bitmapMap[indexToSave]
+        if (oldBitmap != null && !oldBitmap.isRecycled) {
+            if (backPreviewImage.visibility == View.VISIBLE && backPreviewImage.drawable != null) {
+                bitmap.recycle()
+                return
+            }
+            oldBitmap.recycle()
+        }
         bitmapMap[indexToSave] = bitmap
 
-        if (bitmapMap.size > 5) {
-            bitmapMap.keys.minOrNull()?.let { key ->
-                if (key < indexToSave - 1) bitmapMap.remove(key)?.recycle()
+        if (bitmapMap.size > MAX_BITMAP_CACHE_SIZE) {
+            val currentIndex = webView.copyBackForwardList().currentIndex
+            val keyToRemove = bitmapMap.keys.maxByOrNull { abs(it - currentIndex) }
+            if (keyToRemove != null && abs(keyToRemove - currentIndex) > 5) {
+                bitmapMap.remove(keyToRemove)?.let { if (!it.isRecycled) it.recycle() }
             }
         }
     }
 
     private fun playForwardAnimation() {
         if (isSwiping) return
-
         val list = webView.copyBackForwardList()
         val currentIndex = list.currentIndex
+        val screenWidth = webView.width.toFloat()
         val currentUrl = webView.url ?: ""
         val currentPath = currentUrl.replace(Constants.BASE_URL, "")
-        val screenWidth = webView.width.toFloat()
-
         val isHomePath = currentPath in Constants.RESTRICTED_PATHS || currentPath.isEmpty() || currentPath == "/"
-        val prevBitmap = bitmapMap[currentIndex - 1]
 
-        if (!isHomePath && lastHistoryIndex != -1 && currentIndex > lastHistoryIndex && prevBitmap != null && screenWidth > 0) {
-            val interpolator = PathInterpolator(0.22f, 1f, 0.36f, 1f)
-
-            backPreviewImage.apply {
-                setImageBitmap(prevBitmap)
-                visibility = View.VISIBLE
-                alpha = 1f
-                translationX = 0f
-                animate()
-                    .translationX(-screenWidth * 0.3f)
-                    .alpha(0.8f)
-                    .setDuration(ANIMATION_DURATION)
-                    .setInterpolator(interpolator)
-                    .start()
-            }
-
-            webView.apply {
-                translationX = screenWidth
-                elevation = 20f
-                animate()
-                    .translationX(0f)
-                    .setDuration(ANIMATION_DURATION)
-                    .setInterpolator(interpolator)
-                    .withEndAction {
+        if (!isHomePath && lastHistoryIndex != -1 && currentIndex > lastHistoryIndex && screenWidth > 0) {
+            val prevBitmap = bitmapMap[currentIndex - 1]
+            if (prevBitmap != null && !prevBitmap.isRecycled) {
+                val interpolator = PathInterpolator(0.22f, 1f, 0.36f, 1f)
+                backPreviewImage.apply {
+                    setImageBitmap(prevBitmap)
+                    visibility = View.VISIBLE
+                    alpha = 1f
+                    translationX = 0f
+                    animate().translationX(-screenWidth * 0.3f).alpha(0.8f).setDuration(ANIMATION_DURATION).setInterpolator(interpolator).start()
+                }
+                webView.apply {
+                    translationX = screenWidth
+                    elevation = 20f
+                    animate().translationX(0f).setDuration(ANIMATION_DURATION).setInterpolator(interpolator).withEndAction {
                         elevation = 0f
                         fadeOutPreviewImage()
-                    }
-                    .start()
+                    }.start()
+                }
             }
         } else {
+            backPreviewImage.setImageBitmap(null)
             webView.translationX = 0f
             fadeOutPreviewImage()
         }
-        lastHistoryIndex = currentIndex
     }
 
     private fun freezeCurrentScreen(targetUrl: String?) {
@@ -336,11 +323,13 @@ class MainActivity : AppCompatActivity() {
         val targetPath = targetUrl?.replace(Constants.BASE_URL, "") ?: ""
         if (targetPath !in Constants.RESTRICTED_PATHS && targetPath.isNotEmpty()) {
             bitmapMap[targetIndex]?.let {
-                backPreviewImage.setImageBitmap(it)
-                backPreviewImage.visibility = View.VISIBLE
-                backPreviewImage.alpha = 1f
-                backPreviewImage.translationX = 0f
-                webView.translationX = webView.width.toFloat()
+                if (!it.isRecycled) {
+                    backPreviewImage.setImageBitmap(it)
+                    backPreviewImage.visibility = View.VISIBLE
+                    backPreviewImage.alpha = 1f
+                    backPreviewImage.translationX = 0f
+                    webView.translationX = webView.width.toFloat()
+                }
             }
         }
     }
@@ -350,9 +339,13 @@ class MainActivity : AppCompatActivity() {
             override fun handleOnBackStarted(backEvent: BackEventCompat) {
                 isSwiping = true
                 val currentIndex = webView.copyBackForwardList().currentIndex
-                bitmapMap[currentIndex - 1]?.let {
-                    backPreviewImage.setImageBitmap(it)
+                if (bitmapMap[currentIndex - 1] == null) captureCurrentState(currentIndex, true)
+                
+                val prevBitmap = bitmapMap[currentIndex - 1]
+                if (prevBitmap != null && !prevBitmap.isRecycled) {
+                    backPreviewImage.setImageBitmap(prevBitmap)
                     backPreviewImage.visibility = View.VISIBLE
+                    backPreviewImage.alpha = 1f
                 }
                 webView.pivotX = if (backEvent.swipeEdge == BackEventCompat.EDGE_LEFT) 0f else webView.width.toFloat()
             }
@@ -360,13 +353,11 @@ class MainActivity : AppCompatActivity() {
             override fun handleOnBackProgressed(backEvent: BackEventCompat) {
                 val progress = backEvent.progress
                 val screenWidth = webView.width.toFloat()
-
                 webView.translationX = progress * screenWidth
                 backPreviewImage.apply {
                     translationX = -screenWidth * 0.2f * (1f - progress)
                     alpha = 0.7f + (progress * 0.3f)
                 }
-
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                     webView.clipToOutline = true
                     webView.outlineProvider = object : ViewOutlineProvider() {
@@ -379,6 +370,7 @@ class MainActivity : AppCompatActivity() {
 
             override fun handleOnBackPressed() {
                 isSwiping = false
+                isBackNavigating = true
                 val screenWidth = webView.width.toFloat()
                 val interpolator = PathInterpolator(0.22f, 1f, 0.36f, 1f)
 
@@ -388,22 +380,19 @@ class MainActivity : AppCompatActivity() {
                     .setDuration(250)
                     .setInterpolator(interpolator)
                     .withEndAction {
+                        // 이전 로직: 바로 제자리로 복구 및 불투명화
                         webView.translationX = 0f
                         webView.alpha = 1f
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) webView.clipToOutline = false
                     }
                     .start()
 
-                backPreviewImage.animate()
-                    .translationX(0f)
-                    .alpha(1f)
-                    .setDuration(250)
-                    .setInterpolator(interpolator)
-                    .start()
+                backPreviewImage.animate().translationX(0f).alpha(1f).setDuration(250).setInterpolator(interpolator).start()
 
                 if (webView.canGoBack()) {
                     webView.goBack()
-                    webView.postDelayed({ fadeOutPreviewImage() }, 300)
+                    // 500ms 지연 호출하던 시점
+                    webView.postDelayed({ if(isBackNavigating) fadeOutPreviewImage() }, 500)
                 } else {
                     fadeOutPreviewImage()
                 }
@@ -412,18 +401,12 @@ class MainActivity : AppCompatActivity() {
             override fun handleOnBackCancelled() {
                 isSwiping = false
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) webView.clipToOutline = false
-
-                webView.animate()
-                    .translationX(0f)
-                    .setDuration(300)
-                    .setInterpolator(PathInterpolator(0.22f, 1f, 0.36f, 1f))
-                    .start()
-
-                backPreviewImage.animate()
-                    .alpha(0f)
-                    .setDuration(250)
-                    .withEndAction { backPreviewImage.visibility = View.INVISIBLE }
-                    .start()
+                webView.animate().translationX(0f).setDuration(300).setInterpolator(PathInterpolator(0.22f, 1f, 0.36f, 1f)).start()
+                backPreviewImage.animate().alpha(0f).setDuration(250).withEndAction { 
+                    if (!isSwiping) {
+                        backPreviewImage.visibility = View.INVISIBLE
+                    }
+                }.start()
             }
         }
         onBackPressedDispatcher.addCallback(this, backPressCallback)
@@ -431,35 +414,28 @@ class MainActivity : AppCompatActivity() {
 
     private fun fadeOutPreviewImage() {
         if (backPreviewImage.visibility == View.VISIBLE) {
-            backPreviewImage.animate()
-                .alpha(0f)
-                .setDuration(200)
-                .withEndAction {
+            backPreviewImage.animate().alpha(0f).setDuration(300).withEndAction {
+                if (!isSwiping) {
                     backPreviewImage.visibility = View.INVISIBLE
                     backPreviewImage.alpha = 1f
+                    backPreviewImage.setImageBitmap(null)
                 }
-                .start()
+                isBackNavigating = false
+            }.start()
         }
     }
 
     private fun loadInitialPage() {
-        if (networkHelper.isInternetAvailable()) {
-            webView.loadUrl(Constants.BASE_URL)
-        } else {
+        if (networkHelper.isInternetAvailable()) webView.loadUrl(Constants.BASE_URL)
+        else {
             isReady = true
             showRetryDialog()
         }
     }
 
     private fun checkAndRequestPermissions() {
-        val permissions = mutableListOf(
-            Manifest.permission.CAMERA,
-            Manifest.permission.ACCESS_FINE_LOCATION,
-            Manifest.permission.ACCESS_COARSE_LOCATION
-        ).apply {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                add(Manifest.permission.POST_NOTIFICATIONS)
-            }
+        val permissions = mutableListOf(Manifest.permission.CAMERA, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION).apply {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) add(Manifest.permission.POST_NOTIFICATIONS)
         }
         permissionLauncher.launch(permissions.toTypedArray())
     }
@@ -474,11 +450,8 @@ class MainActivity : AppCompatActivity() {
         filePathCallback?.onReceiveValue(null)
         filePathCallback = callback
         val request = PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            pickMultipleImagesLauncher.launch(request)
-        } else {
-            pickImageLauncher.launch(request)
-        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) pickMultipleImagesLauncher.launch(request)
+        else pickImageLauncher.launch(request)
         return true
     }
 
@@ -491,31 +464,20 @@ class MainActivity : AppCompatActivity() {
     private fun showToast(message: String) = Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
 
     private fun showRetryDialog() {
-        AlertDialog.Builder(this)
-            .setTitle("인터넷 연결 없음")
-            .setMessage("연결 후 다시 시도해주세요.")
-            .setPositiveButton("재시도") { _, _ -> loadInitialPage() }
-            .setNegativeButton("종료") { _, _ -> finish() }
-            .setCancelable(false)
-            .show()
+        AlertDialog.Builder(this).setTitle("인터넷 연결 없음").setMessage("연결 후 다시 시도해주세요.").setPositiveButton("재시도") { _, _ -> loadInitialPage() }.setNegativeButton("종료") { _, _ -> finish() }.setCancelable(false).show()
     }
 
     private fun showRefreshDialog() {
-        AlertDialog.Builder(this)
-            .setTitle("업데이트")
-            .setMessage("최신 버전으로 업데이트할까요?")
-            .setPositiveButton("확인") { _, _ ->
-                webView.clearCache(true)
-                webView.reload()
-            }
-            .setNegativeButton("취소", null)
-            .show()
+        AlertDialog.Builder(this).setTitle("업데이트").setMessage("최신 버전으로 업데이트할까요?").setPositiveButton("확인") { _, _ ->
+            webView.clearCache(true)
+            webView.reload()
+        }.setNegativeButton("취소", null).show()
     }
 
     override fun onDestroy() {
         super.onDestroy()
         webView.removeCallbacks(scrollCaptureRunnable)
-        bitmapMap.values.forEach { it.recycle() }
+        bitmapMap.values.forEach { if (!it.isRecycled) it.recycle() }
         bitmapMap.clear()
     }
 }

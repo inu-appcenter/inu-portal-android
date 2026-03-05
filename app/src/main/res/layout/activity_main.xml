@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:fitsSystemWindows="true"
-    android:background="?android:attr/colorBackground"
+    android:background="@color/app_background_color"
     tools:context="inu.appcenter.intip_android.MainActivity">
 
     <FrameLayout
@@ -17,11 +17,13 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:scaleType="centerCrop"
-            android:visibility="invisible" />
+            android:visibility="invisible"
+            android:background="@color/app_background_color" />
 
         <WebView
             android:id="@+id/webview"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
+            
     </FrameLayout>
 </LinearLayout>

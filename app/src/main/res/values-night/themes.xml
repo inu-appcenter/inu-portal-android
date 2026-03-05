@@ -1,16 +1,34 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <style name="Base.Theme.INTIP" parent="Theme.Material3.DayNight.NoActionBar">
+    <style name="Base.Theme.INTIP" parent="Theme.Material3.Light.NoActionBar">
         <item name="colorPrimary">@color/intip_color</item>
+        <item name="android:windowBackground">@color/app_background_color</item>
+        <item name="android:statusBarColor">@color/app_background_color</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:navigationBarColor">@color/app_background_color</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="27">true</item>
 
-        <item name="android:statusBarColor">@android:color/black</item>
-        <item name="android:windowLightStatusBar">false</item>
+        <!-- Material 3 Background & Surface Colors -->
+        <item name="android:colorBackground">@color/app_background_color</item>
+        <item name="colorSurface">@color/app_background_color</item>
+        <item name="colorSurfaceVariant">@color/app_background_color</item>
+        <item name="colorSurfaceContainer">@color/app_background_color</item>
+        <item name="colorSurfaceContainerHigh">@color/app_background_color</item>
+        <item name="colorSurfaceContainerHighest">@color/app_background_color</item>
+        <item name="colorSurfaceContainerLow">@color/app_background_color</item>
+        <item name="colorSurfaceContainerLowest">@color/app_background_color</item>
+        
+        <!-- Prevent reddish tints from other Material 3 attributes -->
+        <item name="colorSecondary">@color/intip_color</item>
+        <item name="colorSecondaryContainer">@color/app_background_color</item>
+        <item name="colorTertiary">@color/intip_color</item>
+        <item name="colorTertiaryContainer">@color/app_background_color</item>
 
         <item name="android:alertDialogTheme">@style/Theme.INTIP.Dialog</item>
     </style>
 
     <style name="Theme.INTIP" parent="Base.Theme.INTIP" />
 
-    <style name="Theme.INTIP.Dialog" parent="android:Theme.DeviceDefault.Dialog.Alert">
+    <style name="Theme.INTIP.Dialog" parent="android:Theme.DeviceDefault.Light.Dialog.Alert">
         <item name="android:buttonBarPositiveButtonStyle">@style/INTIP.Dialog.Button</item>
         <item name="android:buttonBarNegativeButtonStyle">@style/INTIP.Dialog.Button</item>
         <item name="android:buttonBarNeutralButtonStyle">@style/INTIP.Dialog.Button</item>
