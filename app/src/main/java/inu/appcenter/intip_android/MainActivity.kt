@@ -53,15 +53,15 @@ class MainActivity : AppCompatActivity() {
     private val downloadHelper by lazy { DownloadHelper(this) }
     private var filePathCallback: ValueCallback<Array<Uri>>? = null
 
-    // 상수
+    // 상수 최적화
     private companion object {
         const val CAPTURE_DELAY = 300L
-        const val BITMAP_SCALE = 1f
+        const val BITMAP_SCALE = 0.5f // 1.0f에서 0.5f로 축소 (성능 향상 핵심)
         const val ANIMATION_DURATION = 350L
-        const val MAX_BITMAP_CACHE_SIZE = 20
+        const val MAX_BITMAP_CACHE_SIZE = 15
     }
 
-    // 캡처 실행
+    // 캡처 실행 (지연된 고화질 캡처용)
     private val scrollCaptureRunnable = Runnable {
         if (!isScrolling && !isSwiping && isReady) {
             captureCurrentState(null, false)
@@ -182,7 +182,7 @@ class MainActivity : AppCompatActivity() {
                 if (isReady && !isSwiping) {
                     webView.postDelayed(scrollCaptureRunnable, CAPTURE_DELAY)
                 }
-            }, 150)
+            }, 200) // 딜레이 약간 증가
         }
 
         webView.webViewClient = AppWebViewClient(
@@ -190,6 +190,7 @@ class MainActivity : AppCompatActivity() {
             onPageStartedCallback = { url ->
                 updateBackPressState(url)
                 webView.removeCallbacks(scrollCaptureRunnable)
+                // 현재 페이지 떠나기 전 캡처 (스케일 다운되어 빠름)
                 if (!isSwiping && lastHistoryIndex != -1) {
                     captureCurrentState(lastHistoryIndex, true)
                 }
@@ -206,7 +207,7 @@ class MainActivity : AppCompatActivity() {
                     webView.postDelayed({
                         fadeOutPreviewImage()
                         isBackNavigating = false
-                    }, 500) // 지연 시간을 주던 시점
+                    }, 500)
                 }
                 webView.postDelayed(scrollCaptureRunnable, CAPTURE_DELAY)
                 lastHistoryIndex = webView.copyBackForwardList().currentIndex
@@ -235,8 +236,11 @@ class MainActivity : AppCompatActivity() {
         if (indexToSave < 0) return
 
         try {
+            // 해상도 축소로 연산량 감소
             val width = (webView.width * BITMAP_SCALE).toInt()
             val height = (webView.height * BITMAP_SCALE).toInt()
+            if (width <= 0 || height <= 0) return
+            
             val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565)
 
             if (!isSync && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -249,6 +253,7 @@ class MainActivity : AppCompatActivity() {
                     else bitmap.recycle()
                 }, Handler(Looper.getMainLooper()))
             } else {
+                // 스케일링된 캔버스에 그리기 (UI 스레드 점유 시간 단축)
                 val canvas = Canvas(bitmap)
                 canvas.scale(BITMAP_SCALE, BITMAP_SCALE)
                 canvas.translate(-webView.scrollX.toFloat(), -webView.scrollY.toFloat())
@@ -339,8 +344,8 @@ class MainActivity : AppCompatActivity() {
             override fun handleOnBackStarted(backEvent: BackEventCompat) {
                 isSwiping = true
                 val currentIndex = webView.copyBackForwardList().currentIndex
-                if (bitmapMap[currentIndex - 1] == null) captureCurrentState(currentIndex, true)
                 
+                // 제스처 시작 시 캡처 제거 (이미 저장된 캐시 사용으로 버벅임 방지)
                 val prevBitmap = bitmapMap[currentIndex - 1]
                 if (prevBitmap != null && !prevBitmap.isRecycled) {
                     backPreviewImage.setImageBitmap(prevBitmap)
@@ -380,7 +385,6 @@ class MainActivity : AppCompatActivity() {
                     .setDuration(250)
                     .setInterpolator(interpolator)
                     .withEndAction {
-                        // 이전 로직: 바로 제자리로 복구 및 불투명화
                         webView.translationX = 0f
                         webView.alpha = 1f
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) webView.clipToOutline = false
@@ -391,7 +395,6 @@ class MainActivity : AppCompatActivity() {
 
                 if (webView.canGoBack()) {
                     webView.goBack()
-                    // 500ms 지연 호출하던 시점
                     webView.postDelayed({ if(isBackNavigating) fadeOutPreviewImage() }, 500)
                 } else {
                     fadeOutPreviewImage()
@@ -403,9 +406,7 @@ class MainActivity : AppCompatActivity() {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) webView.clipToOutline = false
                 webView.animate().translationX(0f).setDuration(300).setInterpolator(PathInterpolator(0.22f, 1f, 0.36f, 1f)).start()
                 backPreviewImage.animate().alpha(0f).setDuration(250).withEndAction { 
-                    if (!isSwiping) {
-                        backPreviewImage.visibility = View.INVISIBLE
-                    }
+                    if (!isSwiping) backPreviewImage.visibility = View.INVISIBLE
                 }.start()
             }
         }
