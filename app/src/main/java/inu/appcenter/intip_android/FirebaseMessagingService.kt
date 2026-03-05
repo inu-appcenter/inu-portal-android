@@ -40,7 +40,9 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         // 알림 내용 설정
         val title = remoteMessage.notification?.title ?: remoteMessage.data["title"] ?: "알림"
         val body = remoteMessage.notification?.body ?: remoteMessage.data["body"] ?: "새로운 알림이 도착했습니다."
-        val targetPath = remoteMessage.data["TARGET_PATH"]
+        
+        // TARGET_PATH가 없으면 기본적으로 /home/alert로 설정
+        val targetPath = remoteMessage.data["TARGET_PATH"] ?: "/home/alert"
 
         // 알림 클릭 시 실행될 Intent 설정
         val intent = Intent(this, MainActivity::class.java).apply {

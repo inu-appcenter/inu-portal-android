@@ -47,6 +47,7 @@ class MainActivity : AppCompatActivity() {
     private var isReady = false
     private var lastHistoryIndex = -1
     private var isBackNavigating = false
+    private var pendingNotificationUrl: String? = null // 알림 이동 경로 임시 보관
 
     private lateinit var backPressCallback: OnBackPressedCallback
     private val networkHelper by lazy { NetworkHelper(this) }
@@ -56,12 +57,12 @@ class MainActivity : AppCompatActivity() {
     // 상수 최적화
     private companion object {
         const val CAPTURE_DELAY = 300L
-        const val BITMAP_SCALE = 0.5f // 1.0f에서 0.5f로 축소 (성능 향상 핵심)
+        const val BITMAP_SCALE = 0.5f
         const val ANIMATION_DURATION = 350L
         const val MAX_BITMAP_CACHE_SIZE = 15
     }
 
-    // 캡처 실행 (지연된 고화질 캡처용)
+    // 캡처 실행
     private val scrollCaptureRunnable = Runnable {
         if (!isScrolling && !isSwiping && isReady) {
             captureCurrentState(null, false)
@@ -98,6 +99,7 @@ class MainActivity : AppCompatActivity() {
         setupWebView()
         setupBackPressHandler()
         checkAndRequestPermissions()
+        
         handleIntent(intent)
         logFcmToken()
     }
@@ -141,9 +143,25 @@ class MainActivity : AppCompatActivity() {
 
     private fun handleIntent(intent: Intent) {
         val targetPath = intent.getStringExtra("TARGET_PATH")
-        if (targetPath != null) {
-            val url = if (targetPath.startsWith("http")) targetPath else Constants.BASE_URL + if (targetPath.startsWith("/")) targetPath else "/$targetPath"
-            webView.loadUrl(url)
+        val isFromNotification = intent.hasExtra("google.message_id") || intent.hasExtra("google.sent_time") || targetPath != null
+
+        if (isFromNotification) {
+            val url = when {
+                targetPath != null -> {
+                    if (targetPath.startsWith("http")) targetPath 
+                    else Constants.BASE_URL + if (targetPath.startsWith("/")) targetPath else "/$targetPath"
+                }
+                else -> Constants.BASE_URL + "/home/alert"
+            }
+            
+            // 이미 웹뷰가 로드된 상태(백그라운드에서 복귀)라면 즉시 이동
+            if (webView.url != null) {
+                webView.loadUrl(url)
+            } else {
+                // 앱이 처음 켜지는 상태라면 히스토리를 위해 홈을 먼저 로드하고 경로 보관
+                pendingNotificationUrl = url
+                loadInitialPage()
+            }
         } else if (webView.url == null) {
             loadInitialPage()
         }
@@ -182,7 +200,7 @@ class MainActivity : AppCompatActivity() {
                 if (isReady && !isSwiping) {
                     webView.postDelayed(scrollCaptureRunnable, CAPTURE_DELAY)
                 }
-            }, 200) // 딜레이 약간 증가
+            }, 200)
         }
 
         webView.webViewClient = AppWebViewClient(
@@ -190,7 +208,6 @@ class MainActivity : AppCompatActivity() {
             onPageStartedCallback = { url ->
                 updateBackPressState(url)
                 webView.removeCallbacks(scrollCaptureRunnable)
-                // 현재 페이지 떠나기 전 캡처 (스케일 다운되어 빠름)
                 if (!isSwiping && lastHistoryIndex != -1) {
                     captureCurrentState(lastHistoryIndex, true)
                 }
@@ -201,14 +218,23 @@ class MainActivity : AppCompatActivity() {
             },
             onPageFinishedCallback = { url ->
                 updateBackPressState(url)
-                playForwardAnimation()
-                isReady = true
+                
                 if (isBackNavigating) {
-                    webView.postDelayed({
-                        fadeOutPreviewImage()
-                        isBackNavigating = false
-                    }, 500)
+                    webView.alpha = 1f
+                    webView.visibility = View.VISIBLE
+                    fadeOutPreviewImage()
+                    isBackNavigating = false
+                } else {
+                    playForwardAnimation()
                 }
+                
+                // 홈 로딩이 끝난 시점에 대기 중인 알림 경로가 있다면 이동 (히스토리 스택 생성 완료)
+                pendingNotificationUrl?.let { notificationUrl ->
+                    pendingNotificationUrl = null
+                    webView.loadUrl(notificationUrl)
+                }
+                
+                isReady = true
                 webView.postDelayed(scrollCaptureRunnable, CAPTURE_DELAY)
                 lastHistoryIndex = webView.copyBackForwardList().currentIndex
             }
@@ -236,7 +262,6 @@ class MainActivity : AppCompatActivity() {
         if (indexToSave < 0) return
 
         try {
-            // 해상도 축소로 연산량 감소
             val width = (webView.width * BITMAP_SCALE).toInt()
             val height = (webView.height * BITMAP_SCALE).toInt()
             if (width <= 0 || height <= 0) return
@@ -253,7 +278,6 @@ class MainActivity : AppCompatActivity() {
                     else bitmap.recycle()
                 }, Handler(Looper.getMainLooper()))
             } else {
-                // 스케일링된 캔버스에 그리기 (UI 스레드 점유 시간 단축)
                 val canvas = Canvas(bitmap)
                 canvas.scale(BITMAP_SCALE, BITMAP_SCALE)
                 canvas.translate(-webView.scrollX.toFloat(), -webView.scrollY.toFloat())
@@ -344,8 +368,8 @@ class MainActivity : AppCompatActivity() {
             override fun handleOnBackStarted(backEvent: BackEventCompat) {
                 isSwiping = true
                 val currentIndex = webView.copyBackForwardList().currentIndex
+                if (bitmapMap[currentIndex - 1] == null) captureCurrentState(currentIndex, true)
                 
-                // 제스처 시작 시 캡처 제거 (이미 저장된 캐시 사용으로 버벅임 방지)
                 val prevBitmap = bitmapMap[currentIndex - 1]
                 if (prevBitmap != null && !prevBitmap.isRecycled) {
                     backPreviewImage.setImageBitmap(prevBitmap)
