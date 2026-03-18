@@ -132,6 +132,9 @@ class MainActivity : AppCompatActivity() {
             }
             val token = task.result
             Log.d("FCM_TOKEN", "Current token: $token")
+            if (!token.isNullOrBlank()) {
+                FcmTokenBridge.updateToken(this, token, webView)
+            }
         }
     }
 
@@ -174,6 +177,8 @@ class MainActivity : AppCompatActivity() {
 
     @SuppressLint("SetJavaScriptEnabled")
     private fun setupWebView() {
+        FcmTokenBridge.attachWebView(webView)
+
         webView.apply {
             setBackgroundColor(android.graphics.Color.TRANSPARENT)
             setLayerType(View.LAYER_TYPE_HARDWARE, null)
@@ -501,6 +506,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        FcmTokenBridge.detachWebView(webView)
         webView.removeCallbacks(scrollCaptureRunnable)
         bitmapMap.values.forEach { if (!it.isRecycled) it.recycle() }
         bitmapMap.clear()

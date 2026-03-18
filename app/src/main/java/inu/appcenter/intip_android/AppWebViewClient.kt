@@ -9,7 +9,6 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Toast
-import com.google.firebase.messaging.FirebaseMessaging
 import java.net.URISyntaxException
 
 class AppWebViewClient(
@@ -25,14 +24,7 @@ class AppWebViewClient(
 
     override fun onPageFinished(view: WebView?, url: String?) {
         super.onPageFinished(view, url)
-
-        // FCM ?�큰 주입
-        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
-            if (task.isSuccessful) {
-                view?.evaluateJavascript("window.onReceiveFcmToken && window.onReceiveFcmToken('${task.result}');", null)
-            }
-        }
-
+        view?.let { FcmTokenBridge.refreshCurrentToken(context, it) }
         onPageFinishedCallback(url)
     }
 
@@ -53,13 +45,11 @@ class AppWebViewClient(
     override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
         val url = request?.url.toString()
 
-        // 1. ?��? ?�메???�용
         if (Constants.ALLOWED_DOMAINS.any { url.startsWith(it) }) {
             onPageStartedCallback?.invoke(url)
             return false
         }
 
-        // 2. ?��? ???�키�?처리
         return handleExternalScheme(url, view)
     }
 
@@ -73,20 +63,19 @@ class AppWebViewClient(
                 } else {
                     handleAppNotInstalled(intent, view)
                 }
-            } catch (e: URISyntaxException) {
-                Log.e("WebView", "Intent Parse Error: ${e.message}")
+            } catch (error: URISyntaxException) {
+                Log.e("WebView", "Intent Parse Error: ${error.message}")
                 false
-            } catch (e: Exception) {
-                Log.e("WebView", "External App Error: ${e.message}")
+            } catch (error: Exception) {
+                Log.e("WebView", "External App Error: ${error.message}")
                 true
             }
         }
 
-        // 3. ?�반 ?��? 링크
         return try {
             context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
             true
-        } catch (e: Exception) {
+        } catch (error: Exception) {
             Toast.makeText(context, "외부 링크 열기 실패", Toast.LENGTH_SHORT).show()
             true
         }
@@ -105,7 +94,7 @@ class AppWebViewClient(
             return true
         }
 
-        Toast.makeText(context, "관련 앱이 설치되어있지 않습니다.", Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, "관련 앱이 설치되어 있지 않습니다.", Toast.LENGTH_SHORT).show()
         return true
     }
 }
