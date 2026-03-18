@@ -4,7 +4,8 @@ import android.util.Log
 import android.webkit.JavascriptInterface
 
 class WebAppInterface(
-    private val onUpdateRequested: () -> Unit
+    private val onUpdateRequested: () -> Unit,
+    private val onAppSettingsRequested: () -> Unit
 ) {
     @JavascriptInterface
     fun onRouteChange(path: String) {
@@ -14,5 +15,15 @@ class WebAppInterface(
     @JavascriptInterface
     fun requestAppUpdate() {
         onUpdateRequested()
+    }
+
+    @JavascriptInterface
+    fun openAppSettings() {
+        onAppSettingsRequested()
+    }
+
+    @JavascriptInterface
+    fun requestPermissionSettings() {
+        onAppSettingsRequested()
     }
 }

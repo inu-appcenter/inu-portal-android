@@ -14,6 +14,9 @@ import java.net.URISyntaxException
 class AppWebViewClient(
     private val context: Context,
     private val onPageStartedCallback: ((String?) -> Unit)? = null,
+    private val onPageCommitVisibleCallback: ((String?) -> Unit)? = null,
+    private val onHistoryUpdatedCallback: ((String?, Boolean) -> Unit)? = null,
+    private val onInternalNavigationRequestCallback: ((String) -> Boolean)? = null,
     private val onPageFinishedCallback: (String?) -> Unit
 ) : WebViewClient() {
 
@@ -28,25 +31,39 @@ class AppWebViewClient(
         onPageFinishedCallback(url)
     }
 
+    override fun onPageCommitVisible(view: WebView?, url: String?) {
+        super.onPageCommitVisible(view, url)
+        onPageCommitVisibleCallback?.invoke(url)
+    }
+
     override fun onReceivedError(
         view: WebView?,
         request: WebResourceRequest?,
         error: WebResourceError?
     ) {
         super.onReceivedError(view, request, error)
-        onPageFinishedCallback(request?.url.toString())
+        if (request?.isForMainFrame == true) {
+            onPageFinishedCallback(request.url.toString())
+        }
     }
 
     override fun doUpdateVisitedHistory(view: WebView?, url: String?, isReload: Boolean) {
         super.doUpdateVisitedHistory(view, url, isReload)
-        onPageFinishedCallback(url)
+        onHistoryUpdatedCallback?.invoke(url, isReload)
     }
 
     override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
         val url = request?.url.toString()
 
         if (Constants.ALLOWED_DOMAINS.any { url.startsWith(it) }) {
-            onPageStartedCallback?.invoke(url)
+            val isHandledInternalNavigation = request?.isForMainFrame == true &&
+                request.method.equals("GET", ignoreCase = true) &&
+                request.hasGesture() &&
+                onInternalNavigationRequestCallback?.invoke(url) == true
+
+            if (isHandledInternalNavigation) {
+                return true
+            }
             return false
         }
 
