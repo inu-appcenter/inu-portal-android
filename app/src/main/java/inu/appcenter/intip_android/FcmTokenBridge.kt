@@ -37,7 +37,7 @@ object FcmTokenBridge {
 
         FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
             if (!task.isSuccessful) {
-                Log.w("FCM_TOKEN", "Fetching FCM registration token failed", task.exception)
+                Log.w("FCM_TOKEN", "FCM 등록 토큰을 가져오지 못했습니다", task.exception)
                 return@addOnCompleteListener
             }
 

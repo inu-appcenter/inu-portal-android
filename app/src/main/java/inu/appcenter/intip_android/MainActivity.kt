@@ -49,6 +49,12 @@ class MainActivity : AppCompatActivity() {
     private var isBackNavigating = false
     private var pendingForwardPreviewIndex: Int? = null
     private var awaitingVisualCommit = false
+    private var hasCompletedLaunchRefresh = false
+    private var hasIssuedLaunchReload = false
+    private var hasLoggedPostRefreshWebDiagnostics = false
+    private var isAwaitingLaunchWebCleanup = false
+    private var isManualRefreshInProgress = false
+    private var deferredStartupIntent: Intent? = null
     private var isCapturingBeforeNavigation = false
     private var pendingCapturedNavigationUrl: String? = null
     private var isBackAnimationFinished = false
@@ -70,6 +76,7 @@ class MainActivity : AppCompatActivity() {
 
     // 상수 최적화
     private companion object {
+        const val WEBVIEW_REFRESH_TAG = "WebViewRefresh"
         const val CAPTURE_DELAY = 300L
         const val BITMAP_SCALE = 0.5f
         const val ANIMATION_DURATION = 350L
@@ -116,9 +123,11 @@ class MainActivity : AppCompatActivity() {
         createNotificationChannel()
         setupViews()
         setupWebView()
+        logWebViewEnvironment()
         setupBackPressHandler()
         checkAndRequestPermissions()
-        
+
+        startLaunchRefresh()
         handleIntent(intent)
         logFcmToken()
     }
@@ -146,11 +155,11 @@ class MainActivity : AppCompatActivity() {
     private fun logFcmToken() {
         FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
             if (!task.isSuccessful) {
-                Log.w("FCM_TOKEN", "Fetching FCM registration token failed", task.exception)
+                Log.w("FCM_TOKEN", "FCM 등록 토큰을 가져오지 못했습니다", task.exception)
                 return@addOnCompleteListener
             }
             val token = task.result
-            Log.d("FCM_TOKEN", "Current token: $token")
+            Log.d("FCM_TOKEN", "현재 토큰: $token")
             if (!token.isNullOrBlank()) {
                 FcmTokenBridge.updateToken(this, token, webView)
             }
@@ -163,9 +172,19 @@ class MainActivity : AppCompatActivity() {
         handleIntent(intent)
     }
 
-    private fun handleIntent(intent: Intent) {
+    private fun handleIntent(intent: Intent): Boolean {
+        if (!hasCompletedLaunchRefresh) {
+            Log.d(WEBVIEW_REFRESH_TAG, "시작 새로고침이 끝날 때까지 handleIntent를 보류합니다")
+            deferredStartupIntent = intent
+            return false
+        }
+
         val targetPath = intent.getStringExtra("TARGET_PATH")
         val isFromNotification = intent.hasExtra("google.message_id") || intent.hasExtra("google.sent_time") || targetPath != null
+        Log.d(
+            WEBVIEW_REFRESH_TAG,
+            "시작 새로고침 후 handleIntent 실행: 알림유입=$isFromNotification, targetPath=$targetPath, 현재URL=${webView.url}"
+        )
 
         if (isFromNotification) {
             val url = when {
@@ -179,14 +198,19 @@ class MainActivity : AppCompatActivity() {
             // 이미 웹뷰가 로드된 상태(백그라운드에서 복귀)라면 즉시 이동
             if (webView.url != null) {
                 webView.loadUrl(url)
+                return true
             } else {
                 // 앱이 처음 켜지는 상태라면 히스토리를 위해 홈을 먼저 로드하고 경로 보관
                 pendingNotificationUrl = url
                 loadInitialPage()
+                return true
             }
         } else if (webView.url == null) {
             loadInitialPage()
+            return true
         }
+
+        return false
     }
 
     private fun setupViews() {
@@ -254,6 +278,37 @@ class MainActivity : AppCompatActivity() {
             },
             onPageFinishedCallback = { url ->
                 updateBackPressState(url)
+                Log.d(
+                    WEBVIEW_REFRESH_TAG,
+                    "페이지 로드 완료: url=$url, 시작새로고침완료=$hasCompletedLaunchRefresh, 시작리로드실행=$hasIssuedLaunchReload"
+                )
+
+                if (!hasCompletedLaunchRefresh) {
+                    if (!hasIssuedLaunchReload) {
+                        if (!isAwaitingLaunchWebCleanup) {
+                            isAwaitingLaunchWebCleanup = true
+                            Log.d(
+                                WEBVIEW_REFRESH_TAG,
+                                "초기 로드가 끝나 서비스워커와 Cache Storage를 정리한 뒤 다시 로드합니다"
+                            )
+                            clearServiceWorkersAndCacheStorage()
+                        }
+                        return@AppWebViewClient
+                    }
+
+                    hasCompletedLaunchRefresh = true
+                    hasIssuedLaunchReload = false
+                    isAwaitingLaunchWebCleanup = false
+                    Log.d(WEBVIEW_REFRESH_TAG, "다시 로드 후 시작 새로고침이 완료되었습니다")
+                    logPostRefreshWebDiagnostics()
+
+                    val startupIntent = deferredStartupIntent
+                    deferredStartupIntent = null
+                    if (startupIntent != null && handleIntent(startupIntent)) {
+                        Log.d(WEBVIEW_REFRESH_TAG, "시작 새로고침 후 보류된 시작 인텐트를 처리했습니다")
+                        return@AppWebViewClient
+                    }
+                }
                 
                 // 홈 로딩이 끝난 시점에 대기 중인 알림 경로가 있다면 이동 (히스토리 스택 생성 완료)
                 pendingNotificationUrl?.let { notificationUrl ->
@@ -280,6 +335,15 @@ class MainActivity : AppCompatActivity() {
                 },
                 onAppSettingsRequested = {
                     runOnUiThread { openAppSettings() }
+                },
+                onWebDiagnosticsLogged = { payload ->
+                    Log.d(WEBVIEW_REFRESH_TAG, "새로고침 후 웹 진단=$payload")
+                },
+                onLaunchWebCleanupFinished = { payload ->
+                    runOnUiThread {
+                        if (isManualRefreshInProgress) handleManualRefreshCleanupFinished(payload)
+                        else handleLaunchWebCleanupFinished(payload)
+                    }
                 }
             ),
             "AndroidBridge"
@@ -570,6 +634,246 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun startLaunchRefresh() {
+        if (hasCompletedLaunchRefresh || hasIssuedLaunchReload || webView.url != null) {
+            Log.d(
+                WEBVIEW_REFRESH_TAG,
+                "startLaunchRefresh를 건너뜁니다: 완료=$hasCompletedLaunchRefresh, 리로드실행=$hasIssuedLaunchReload, 현재URL=${webView.url}"
+            )
+            return
+        }
+        if (!networkHelper.isInternetAvailable()) {
+            Log.d(WEBVIEW_REFRESH_TAG, "네트워크를 사용할 수 없어 시작 새로고침을 건너뜁니다")
+            isReady = true
+            showRetryDialog()
+            return
+        }
+
+        isReady = false
+        Log.d(
+            WEBVIEW_REFRESH_TAG,
+            "시작 새로고침을 시작합니다: loadUrl(${Constants.BASE_URL})"
+        )
+        webView.loadUrl(Constants.BASE_URL)
+    }
+
+    private fun logWebViewEnvironment() {
+        val pkg = WebView.getCurrentWebViewPackage()
+        Log.d(
+            WEBVIEW_REFRESH_TAG,
+            "WebView 패키지=${pkg?.packageName}, 버전명=${pkg?.versionName}, 버전코드=${pkg?.longVersionCode}"
+        )
+        Log.d(
+            WEBVIEW_REFRESH_TAG,
+            "초기 userAgent=${webView.settings.userAgentString}"
+        )
+    }
+
+    private fun clearServiceWorkersAndCacheStorage() {
+        val script = """
+            (function() {
+              const result = {
+                href: location.href,
+                serviceWorkerSupported: 'serviceWorker' in navigator,
+                cacheStorageSupported: 'caches' in window
+              };
+              const tasks = [];
+              try {
+                if ('serviceWorker' in navigator) {
+                  tasks.push(
+                    navigator.serviceWorker.getRegistrations()
+                      .then(function(regs) {
+                        result.registrationCount = regs.length;
+                        return Promise.allSettled(
+                          regs.map(function(reg) {
+                            return reg.unregister().then(function(unregistered) {
+                              return {
+                                scope: reg.scope,
+                                unregistered: unregistered
+                              };
+                            });
+                          })
+                        ).then(function(items) {
+                          result.serviceWorkerUnregisterResults = items.map(function(item) {
+                            return item.status === 'fulfilled' ? item.value : String(item.reason);
+                          });
+                        });
+                      })
+                      .catch(function(e) {
+                        result.serviceWorkerCleanupError = String(e);
+                      })
+                  );
+                }
+              } catch (e) {
+                result.serviceWorkerCleanupError = String(e);
+              }
+              try {
+                if ('caches' in window) {
+                  tasks.push(
+                    caches.keys()
+                      .then(function(names) {
+                        result.cacheNamesBeforeDelete = names;
+                        return Promise.allSettled(
+                          names.map(function(name) {
+                            return caches.delete(name).then(function(deleted) {
+                              return {
+                                name: name,
+                                deleted: deleted
+                              };
+                            });
+                          })
+                        ).then(function(items) {
+                          result.cacheDeleteResults = items.map(function(item) {
+                            return item.status === 'fulfilled' ? item.value : String(item.reason);
+                          });
+                        });
+                      })
+                      .catch(function(e) {
+                        result.cacheCleanupError = String(e);
+                      })
+                  );
+                }
+              } catch (e) {
+                result.cacheCleanupError = String(e);
+              }
+              Promise.allSettled(tasks).then(function() {
+                const payload = JSON.stringify(result);
+                if (window.AndroidBridge && window.AndroidBridge.onLaunchWebCleanupFinished) {
+                  window.AndroidBridge.onLaunchWebCleanupFinished(payload);
+                } else {
+                  console.log("시작 웹 정리 완료=" + payload);
+                }
+              });
+              return "scheduled";
+            })();
+        """.trimIndent()
+
+        webView.evaluateJavascript(script) { result ->
+            Log.d(WEBVIEW_REFRESH_TAG, "시작 웹 정리 스크립트 실행 결과=$result")
+        }
+    }
+
+    private fun handleLaunchWebCleanupFinished(payload: String) {
+        Log.d(WEBVIEW_REFRESH_TAG, "시작 웹 정리 완료 결과=$payload")
+
+        if (hasCompletedLaunchRefresh || hasIssuedLaunchReload) return
+
+        isAwaitingLaunchWebCleanup = false
+        hasIssuedLaunchReload = true
+        Log.d(WEBVIEW_REFRESH_TAG, "시작 웹 정리가 끝나 webView.reload()를 실행합니다")
+        webView.reload()
+    }
+
+    private fun handleManualRefreshCleanupFinished(payload: String) {
+        Log.d(WEBVIEW_REFRESH_TAG, "수동 새로고침 정리 완료 결과=$payload")
+
+        if (!isManualRefreshInProgress) return
+
+        isManualRefreshInProgress = false
+        val targetUrl = webView.url ?: Constants.BASE_URL
+        Log.d(WEBVIEW_REFRESH_TAG, "수동 새로고침 정리가 끝나 URL을 다시 로드합니다: $targetUrl")
+        webView.loadUrl(targetUrl)
+    }
+
+    private fun logPostRefreshWebDiagnostics() {
+        if (hasLoggedPostRefreshWebDiagnostics) return
+        if (!webView.url.orEmpty().startsWith(Constants.BASE_URL)) return
+
+        hasLoggedPostRefreshWebDiagnostics = true
+        val script = """
+            (function() {
+              const details = {
+                href: location.href,
+                userAgent: navigator.userAgent,
+                serviceWorkerSupported: 'serviceWorker' in navigator,
+                serviceWorkerControlled: !!(navigator.serviceWorker && navigator.serviceWorker.controller),
+                serviceWorkerController: navigator.serviceWorker && navigator.serviceWorker.controller ? navigator.serviceWorker.controller.scriptURL : null,
+                cacheStorageSupported: 'caches' in window
+              };
+              try {
+                details.localStorageLength = localStorage.length;
+              } catch (e) {
+                details.localStorageLength = "error:" + e.message;
+              }
+              try {
+                details.sessionStorageLength = sessionStorage.length;
+              } catch (e) {
+                details.sessionStorageLength = "error:" + e.message;
+              }
+              const tasks = [];
+              try {
+                if ('serviceWorker' in navigator) {
+                  tasks.push(
+                    navigator.serviceWorker.getRegistrations()
+                      .then(function(regs) {
+                        details.serviceWorkerRegistrations = regs.map(function(reg) {
+                          return {
+                            scope: reg.scope,
+                            active: reg.active ? reg.active.scriptURL : null,
+                            waiting: reg.waiting ? reg.waiting.scriptURL : null,
+                            installing: reg.installing ? reg.installing.scriptURL : null
+                          };
+                        });
+                      })
+                      .catch(function(e) {
+                        details.serviceWorkerRegistrationsError = String(e);
+                      })
+                  );
+                }
+              } catch (e) {
+                details.serviceWorkerRegistrationsError = String(e);
+              }
+              try {
+                if ('caches' in window) {
+                  tasks.push(
+                    caches.keys()
+                      .then(function(names) {
+                        details.cacheNames = names;
+                      })
+                      .catch(function(e) {
+                        details.cacheNamesError = String(e);
+                      })
+                  );
+                }
+              } catch (e) {
+                details.cacheNamesError = String(e);
+              }
+              try {
+                tasks.push(
+                  fetch(location.href, { cache: 'no-store', credentials: 'include' })
+                    .then(function(response) {
+                      details.noStoreFetch = {
+                        ok: response.ok,
+                        status: response.status,
+                        cacheControl: response.headers.get('cache-control'),
+                        etag: response.headers.get('etag'),
+                        lastModified: response.headers.get('last-modified')
+                      };
+                    })
+                    .catch(function(e) {
+                      details.noStoreFetchError = String(e);
+                    })
+                );
+              } catch (e) {
+                details.noStoreFetchError = String(e);
+              }
+              Promise.allSettled(tasks).then(function() {
+                const payload = JSON.stringify(details);
+                if (window.AndroidBridge && window.AndroidBridge.logWebDiagnostics) {
+                  window.AndroidBridge.logWebDiagnostics(payload);
+                } else {
+                  console.log("새로고침 후 웹 진단=" + payload);
+                }
+              });
+              return "scheduled";
+            })();
+        """.trimIndent()
+
+        webView.evaluateJavascript(script) { result ->
+            Log.d(WEBVIEW_REFRESH_TAG, "새로고침 후 웹 진단 스크립트 실행 결과=$result")
+        }
+    }
+
     private fun checkAndRequestPermissions() {
         val permissions = mutableListOf(Manifest.permission.CAMERA, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION).apply {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) add(Manifest.permission.POST_NOTIFICATIONS)
@@ -738,6 +1042,10 @@ class MainActivity : AppCompatActivity() {
         val currentIndex = webView.copyBackForwardList().currentIndex
         currentHistoryIndex = currentIndex
 
+        if (!hasCompletedLaunchRefresh) {
+            return
+        }
+
         if (!url.isNullOrBlank() && url != previousUrl) {
             invalidateCaptureState()
         }
@@ -767,6 +1075,11 @@ class MainActivity : AppCompatActivity() {
     private fun handlePageCommitVisible() {
         val committedIndex = webView.copyBackForwardList().currentIndex
         val previewIndex = pendingForwardPreviewIndex
+
+        if (!hasCompletedLaunchRefresh) {
+            currentHistoryIndex = committedIndex
+            return
+        }
 
         if (isBackNavigating) {
             webView.visibility = View.VISIBLE
@@ -822,14 +1135,28 @@ class MainActivity : AppCompatActivity() {
     private fun showToast(message: String) = Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
 
     private fun showRetryDialog() {
-        AlertDialog.Builder(this).setTitle("인터넷 연결 없음").setMessage("연결 후 다시 시도해주세요.").setPositiveButton("재시도") { _, _ -> loadInitialPage() }.setNegativeButton("종료") { _, _ -> finish() }.setCancelable(false).show()
+        AlertDialog.Builder(this).setTitle("인터넷 연결 없음").setMessage("연결 후 다시 시도해주세요.").setPositiveButton("재시도") { _, _ ->
+            if (hasCompletedLaunchRefresh) loadInitialPage()
+            else startLaunchRefresh()
+        }.setNegativeButton("종료") { _, _ -> finish() }.setCancelable(false).show()
     }
 
     private fun showRefreshDialog() {
         AlertDialog.Builder(this).setTitle("업데이트").setMessage("최신 버전으로 업데이트할까요?").setPositiveButton("확인") { _, _ ->
-            webView.clearCache(true)
-            webView.reload()
+            refreshWebView()
         }.setNegativeButton("취소", null).show()
+    }
+
+    private fun refreshWebView() {
+        if (isManualRefreshInProgress) {
+            Log.d(WEBVIEW_REFRESH_TAG, "수동 새로고침이 이미 진행 중입니다")
+            return
+        }
+
+        isManualRefreshInProgress = true
+        Log.d(WEBVIEW_REFRESH_TAG, "수동 새로고침을 시작합니다: clearCache(true) + 서비스워커 정리")
+        webView.clearCache(true)
+        clearServiceWorkersAndCacheStorage()
     }
 
     private fun openAppSettings() {

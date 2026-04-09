@@ -81,10 +81,10 @@ class AppWebViewClient(
                     handleAppNotInstalled(intent, view)
                 }
             } catch (error: URISyntaxException) {
-                Log.e("WebView", "Intent Parse Error: ${error.message}")
+                Log.e("WebView", "인텐트 파싱 오류: ${error.message}")
                 false
             } catch (error: Exception) {
-                Log.e("WebView", "External App Error: ${error.message}")
+                Log.e("WebView", "외부 앱 실행 오류: ${error.message}")
                 true
             }
         }

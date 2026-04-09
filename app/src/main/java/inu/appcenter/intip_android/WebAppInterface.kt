@@ -5,7 +5,9 @@ import android.webkit.JavascriptInterface
 
 class WebAppInterface(
     private val onUpdateRequested: () -> Unit,
-    private val onAppSettingsRequested: () -> Unit
+    private val onAppSettingsRequested: () -> Unit,
+    private val onWebDiagnosticsLogged: ((String) -> Unit)? = null,
+    private val onLaunchWebCleanupFinished: ((String) -> Unit)? = null
 ) {
     @JavascriptInterface
     fun onRouteChange(path: String) {
@@ -25,5 +27,15 @@ class WebAppInterface(
     @JavascriptInterface
     fun requestPermissionSettings() {
         onAppSettingsRequested()
+    }
+
+    @JavascriptInterface
+    fun logWebDiagnostics(payload: String) {
+        onWebDiagnosticsLogged?.invoke(payload)
+    }
+
+    @JavascriptInterface
+    fun onLaunchWebCleanupFinished(payload: String) {
+        onLaunchWebCleanupFinished?.invoke(payload)
     }
 }

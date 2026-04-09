@@ -17,20 +17,20 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
 
     override fun onNewToken(token: String) {
         super.onNewToken(token)
-        android.util.Log.d("FCM_LOG", "Refreshed token: $token")
+        android.util.Log.d("FCM_LOG", "새로 발급된 토큰: $token")
         FcmTokenBridge.updateToken(this, token)
     }
 
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
-        android.util.Log.d("FCM_LOG", "From: ${remoteMessage.from}")
-        android.util.Log.d("FCM_LOG", "Notification Message Body: ${remoteMessage.notification?.body}")
-        android.util.Log.d("FCM_LOG", "Data Payload: ${remoteMessage.data}")
+        android.util.Log.d("FCM_LOG", "보낸 사람: ${remoteMessage.from}")
+        android.util.Log.d("FCM_LOG", "알림 메시지 본문: ${remoteMessage.notification?.body}")
+        android.util.Log.d("FCM_LOG", "데이터 페이로드: ${remoteMessage.data}")
 
         // 알림 권한 체크 (Android 13+)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             if (!notificationManager.areNotificationsEnabled()) {
-                android.util.Log.w("FCM_LOG", "Notifications are disabled by the user.")
+                android.util.Log.w("FCM_LOG", "사용자가 알림을 비활성화했습니다.")
                 return
             }
         }
@@ -64,6 +64,10 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         val notificationBuilder = NotificationCompat.Builder(this, "fcm_default_channel")
             .setContentTitle(title)
             .setContentText(body)
+            .setStyle(
+                NotificationCompat.BigTextStyle()
+                    .bigText(body)
+            )
             .setSmallIcon(R.drawable.ic_notification_logo)
             .setColor(androidx.core.content.ContextCompat.getColor(this, R.color.intip_color))
             .setAutoCancel(true)
@@ -79,9 +83,9 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         try {
             val notificationManager = NotificationManagerCompat.from(this)
             notificationManager.notify(System.currentTimeMillis().toInt(), notificationBuilder.build())
-            android.util.Log.d("FCM_LOG", "Notification displayed successfully.")
+            android.util.Log.d("FCM_LOG", "알림을 정상적으로 표시했습니다.")
         } catch (e: SecurityException) {
-            android.util.Log.e("FCM_LOG", "SecurityException: ${e.message}")
+            android.util.Log.e("FCM_LOG", "보안 예외: ${e.message}")
         }
     }
 

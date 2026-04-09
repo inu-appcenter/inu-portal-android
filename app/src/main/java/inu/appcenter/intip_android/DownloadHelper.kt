@@ -53,7 +53,7 @@ class DownloadHelper(private val context: Context) {
             Toast.makeText(context, "다운로드를 시작했습니다.", Toast.LENGTH_SHORT).show()
 
         } catch (e: Exception) {
-            Log.e("Download", "Error: ${e.message}")
+            Log.e("Download", "다운로드 오류: ${e.message}")
             Toast.makeText(
                 context,
                 "다운로드에 실패했습니다. 관리자에게 문의하세요.",
