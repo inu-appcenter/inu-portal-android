@@ -34,6 +34,8 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.google.firebase.FirebaseApp
 import com.google.firebase.messaging.FirebaseMessaging
+import com.google.android.gms.common.ConnectionResult
+import com.google.android.gms.common.GoogleApiAvailability
 import kotlin.math.abs
 
 class MainActivity : AppCompatActivity() {
@@ -132,6 +134,12 @@ class MainActivity : AppCompatActivity() {
         logFcmToken()
     }
 
+    override fun onResume() {
+        super.onResume()
+        // 포그라운드로 돌아올 때마다 Play Services 가용성 체크 (정석 구현)
+        logFcmToken()
+    }
+
     override fun onConfigurationChanged(newConfig: android.content.res.Configuration) {
         super.onConfigurationChanged(newConfig)
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
@@ -153,6 +161,21 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun logFcmToken() {
+        val availability = GoogleApiAvailability.getInstance()
+        
+        // makeGooglePlayServicesAvailable: 가용하지 않을 경우 표준 해결 UI(업데이트 등)를 시도하고 결과를 Task로 반환 (정석)
+        availability.makeGooglePlayServicesAvailable(this).addOnCompleteListener { task: com.google.android.gms.tasks.Task<Void?> ->
+            if (task.isSuccessful) {
+                // Play Services가 준비된 상태에서만 토큰 요청
+                fetchAndLogFcmToken()
+            } else {
+                val resultCode = availability.isGooglePlayServicesAvailable(this)
+                Log.w("FCM_TOKEN", "Google Play Services를 사용할 수 없습니다. 코드: $resultCode", task.exception)
+            }
+        }
+    }
+
+    private fun fetchAndLogFcmToken() {
         FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
             if (!task.isSuccessful) {
                 Log.w("FCM_TOKEN", "FCM 등록 토큰을 가져오지 못했습니다", task.exception)
