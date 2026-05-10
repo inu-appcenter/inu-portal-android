@@ -12,7 +12,7 @@ configure<com.android.build.api.dsl.ApplicationExtension> {
         applicationId = "inu.appcenter.intip_android"
         minSdk = 28
         targetSdk = 36
-        versionCode = 25
+        versionCode = 26
         versionName = "2.3.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"

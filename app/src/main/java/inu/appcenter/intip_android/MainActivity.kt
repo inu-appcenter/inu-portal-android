@@ -45,7 +45,6 @@ class MainActivity : AppCompatActivity() {
     private val bitmapMap = mutableMapOf<Int, Bitmap>()
 
     private var isSwiping = false
-    private var isScrolling = false
     private var isReady = false
     private var currentHistoryIndex = -1
     private var isBackNavigating = false
@@ -79,22 +78,12 @@ class MainActivity : AppCompatActivity() {
     // 상수 최적화
     private companion object {
         const val WEBVIEW_REFRESH_TAG = "WebViewRefresh"
-        const val CAPTURE_DELAY = 300L
         const val BITMAP_SCALE = 0.5f
         const val ANIMATION_DURATION = 350L
         const val BACK_CROSSFADE_DURATION = 220L
         const val BACK_CROSSFADE_PREVIEW_DELAY = 24L
         const val BACK_CROSSFADE_WEBVIEW_START_ALPHA = 0.12f
         const val MAX_BITMAP_CACHE_SIZE = 15
-    }
-
-    // 캡처 실행
-    private val scrollCaptureRunnable = Runnable {
-        if (!isScrolling && !isSwiping && isReady) {
-            runAfterVisualState {
-                captureCurrentState()
-            }
-        }
     }
 
     private val pickImageLauncher = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
@@ -209,14 +198,9 @@ class MainActivity : AppCompatActivity() {
             "시작 새로고침 후 handleIntent 실행: 알림유입=$isFromNotification, targetPath=$targetPath, 현재URL=${webView.url}"
         )
 
-        if (isFromNotification) {
-            val url = when {
-                targetPath != null -> {
-                    if (targetPath.startsWith("http")) targetPath 
-                    else Constants.BASE_URL + if (targetPath.startsWith("/")) targetPath else "/$targetPath"
-                }
-                else -> Constants.BASE_URL + "/home/alert"
-            }
+        if (isFromNotification && targetPath != null) {
+            val url = if (targetPath.startsWith("http")) targetPath 
+                      else Constants.BASE_URL + if (targetPath.startsWith("/")) targetPath else "/$targetPath"
             
             // 이미 웹뷰가 로드된 상태(백그라운드에서 복귀)라면 즉시 이동
             if (webView.url != null) {
@@ -263,22 +247,16 @@ class MainActivity : AppCompatActivity() {
             cacheMode = WebSettings.LOAD_DEFAULT
         }
 
-        webView.setOnScrollChangeListener { _, _, _, _, _ ->
-            isScrolling = true
-            webView.removeCallbacks(scrollCaptureRunnable)
-            webView.postDelayed({
-                isScrolling = false
-                if (isReady && !isSwiping) {
-                    webView.postDelayed(scrollCaptureRunnable, CAPTURE_DELAY)
-                }
-            }, 200)
-        }
-
         webView.webViewClient = AppWebViewClient(
             context = this,
             onPageStartedCallback = { url ->
                 updateBackPressState(url)
-                webView.removeCallbacks(scrollCaptureRunnable)
+                
+                // 페이지 이동 시 이미 캡처가 안 되어 있다면 여기서 시도 (JS 리다이렉트 등 대비)
+                if (!isBackNavigating && !isSwiping && !isCapturingBeforeNavigation) {
+                    captureCurrentState(force = true)
+                }
+                
                 invalidateCaptureState()
                 pendingForwardPreviewIndex = resolveForwardPreviewIndex(url)
                 awaitingVisualCommit = pendingForwardPreviewIndex != null
@@ -303,17 +281,13 @@ class MainActivity : AppCompatActivity() {
                 updateBackPressState(url)
                 Log.d(
                     WEBVIEW_REFRESH_TAG,
-                    "페이지 로드 완료: url=$url, 시작새로고침완료=$hasCompletedLaunchRefresh, 시작리로드실행=$hasIssuedLaunchReload"
+                    "페이지 로드 완료: url=$url"
                 )
 
                 if (!hasCompletedLaunchRefresh) {
                     if (!hasIssuedLaunchReload) {
                         if (!isAwaitingLaunchWebCleanup) {
                             isAwaitingLaunchWebCleanup = true
-                            Log.d(
-                                WEBVIEW_REFRESH_TAG,
-                                "초기 로드가 끝나 서비스워커와 Cache Storage를 정리한 뒤 다시 로드합니다"
-                            )
                             clearServiceWorkersAndCacheStorage()
                         }
                         return@AppWebViewClient
@@ -322,18 +296,15 @@ class MainActivity : AppCompatActivity() {
                     hasCompletedLaunchRefresh = true
                     hasIssuedLaunchReload = false
                     isAwaitingLaunchWebCleanup = false
-                    Log.d(WEBVIEW_REFRESH_TAG, "다시 로드 후 시작 새로고침이 완료되었습니다")
                     logPostRefreshWebDiagnostics()
 
                     val startupIntent = deferredStartupIntent
                     deferredStartupIntent = null
                     if (startupIntent != null && handleIntent(startupIntent)) {
-                        Log.d(WEBVIEW_REFRESH_TAG, "시작 새로고침 후 보류된 시작 인텐트를 처리했습니다")
                         return@AppWebViewClient
                     }
                 }
                 
-                // 홈 로딩이 끝난 시점에 대기 중인 알림 경로가 있다면 이동 (히스토리 스택 생성 완료)
                 pendingNotificationUrl?.let { notificationUrl ->
                     pendingNotificationUrl = null
                     webView.loadUrl(notificationUrl)
@@ -341,9 +312,11 @@ class MainActivity : AppCompatActivity() {
 
                 if (!awaitingVisualCommit && !isBackNavigating) {
                     if (!isReady) isReady = true
-                    scheduleSnapshotCapture()
+                    // 첫 페이지 로드 완료 시 캡처 (이후 SPA 이동 대비)
+                    captureCurrentState(force = true)
                 }
                 currentHistoryIndex = webView.copyBackForwardList().currentIndex
+                injectPushStateInterceptor()
             }
         )
 
@@ -367,6 +340,12 @@ class MainActivity : AppCompatActivity() {
                         if (isManualRefreshInProgress) handleManualRefreshCleanupFinished(payload)
                         else handleLaunchWebCleanupFinished(payload)
                     }
+                },
+                onPushState = {
+                    runOnUiThread {
+                        Log.d("SPA_NAV", "SPA 이동 감지 (pushState) - 즉시 캡처 시도")
+                        captureCurrentState(force = true)
+                    }
                 }
             ),
             "AndroidBridge"
@@ -385,7 +364,7 @@ class MainActivity : AppCompatActivity() {
             onComplete?.invoke()
             return
         }
-        if (!force && (!isReady || isScrolling)) {
+        if (!force && !isReady) {
             onComplete?.invoke()
             return
         }
@@ -935,7 +914,6 @@ class MainActivity : AppCompatActivity() {
         }
 
         isCapturingBeforeNavigation = true
-        webView.removeCallbacks(scrollCaptureRunnable)
         captureCurrentState(force = true) {
             val nextUrl = pendingCapturedNavigationUrl
             pendingCapturedNavigationUrl = null
@@ -987,7 +965,6 @@ class MainActivity : AppCompatActivity() {
             isReady = true
             resetBackCrossfadeState()
             isBackNavigating = false
-            scheduleSnapshotCapture(CAPTURE_DELAY)
             return
         }
 
@@ -1022,7 +999,6 @@ class MainActivity : AppCompatActivity() {
                 isReady = true
                 resetBackCrossfadeState()
                 isBackNavigating = false
-                scheduleSnapshotCapture(CAPTURE_DELAY)
             }
             .start()
     }
@@ -1053,7 +1029,6 @@ class MainActivity : AppCompatActivity() {
             awaitingVisualCommit = false
             pendingForwardPreviewIndex = null
             isReady = true
-            scheduleSnapshotCapture(ANIMATION_DURATION + CAPTURE_DELAY)
         }
     }
 
@@ -1090,7 +1065,6 @@ class MainActivity : AppCompatActivity() {
         } else if (!isReload) {
             runAfterVisualState {
                 isReady = true
-                scheduleSnapshotCapture(CAPTURE_DELAY)
             }
         }
     }
@@ -1122,15 +1096,6 @@ class MainActivity : AppCompatActivity() {
         pendingForwardPreviewIndex = null
         currentHistoryIndex = committedIndex
         isReady = true
-        val captureDelay = if (previewIndex != null || isBackNavigating) ANIMATION_DURATION + CAPTURE_DELAY else CAPTURE_DELAY
-        scheduleSnapshotCapture(captureDelay)
-    }
-
-    private fun scheduleSnapshotCapture(delayMs: Long = CAPTURE_DELAY) {
-        webView.removeCallbacks(scrollCaptureRunnable)
-        if (isReady && !isSwiping) {
-            webView.postDelayed(scrollCaptureRunnable, delayMs)
-        }
     }
 
     private fun invalidateCaptureState() {
@@ -1195,10 +1160,49 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun injectPushStateInterceptor() {
+        val script = """
+            (function() {
+                if (window._pushStateIntercepted) return;
+                window._pushStateIntercepted = true;
+                
+                const originalPushState = history.pushState;
+                const originalReplaceState = history.replaceState;
+                
+                history.pushState = function() {
+                    const args = arguments;
+                    const self = this;
+                    if (window.AndroidBridge && window.AndroidBridge.onPushState) {
+                        window.AndroidBridge.onPushState();
+                        // 앱이 캡처를 시작할 수 있도록 10ms 정도의 찰나의 지연을 줌
+                        setTimeout(function() {
+                            originalPushState.apply(self, args);
+                        }, 10);
+                    } else {
+                        originalPushState.apply(self, args);
+                    }
+                };
+                
+                history.replaceState = function() {
+                    const args = arguments;
+                    const self = this;
+                    if (window.AndroidBridge && window.AndroidBridge.onPushState) {
+                        window.AndroidBridge.onPushState();
+                        setTimeout(function() {
+                            originalReplaceState.apply(self, args);
+                        }, 10);
+                    } else {
+                        originalReplaceState.apply(self, args);
+                    }
+                };
+            })();
+        """.trimIndent()
+        webView.evaluateJavascript(script, null)
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         FcmTokenBridge.detachWebView(webView)
-        webView.removeCallbacks(scrollCaptureRunnable)
         bitmapMap.values.forEach { if (!it.isRecycled) it.recycle() }
         bitmapMap.clear()
     }

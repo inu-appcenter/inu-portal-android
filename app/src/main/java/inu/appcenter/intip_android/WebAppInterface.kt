@@ -7,11 +7,17 @@ class WebAppInterface(
     private val onUpdateRequested: () -> Unit,
     private val onAppSettingsRequested: () -> Unit,
     private val onWebDiagnosticsLogged: ((String) -> Unit)? = null,
-    private val onLaunchWebCleanupFinished: ((String) -> Unit)? = null
+    private val onLaunchWebCleanupFinished: ((String) -> Unit)? = null,
+    private val onPushState: (() -> Unit)? = null
 ) {
     @JavascriptInterface
     fun onRouteChange(path: String) {
         Log.d("RouteChange", "경로 변경 $path")
+    }
+
+    @JavascriptInterface
+    fun onPushState() {
+        onPushState?.invoke()
     }
 
     @JavascriptInterface
