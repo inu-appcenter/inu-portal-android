@@ -100,5 +100,4 @@ Jetpack Compose의 `AndroidView`로 WebView를 감쌀 때, Compose의 레이아�
 ### 보안 및 코드 품질
 
 - `google-services.json` `.gitignore` 추가 및 히스토리에서 제거
-- ProGuard 규칙 설정 (JSON 데이터 난독화 방지 포함)
 - 서버 URL, 앱 설정 상수를 `K` 오브젝트로 일괄 관리
