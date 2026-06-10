@@ -1,6 +1,10 @@
 # INU 포탈넷 안드로이드
 
 <p align="center">
+  <img src="assets/intip.webp" width="120"/>
+</p>
+
+<p align="center">
   <img src="https://img.shields.io/badge/Kotlin-7F52FF?style=flat-square&logo=kotlin&logoColor=white"/>
   <img src="https://img.shields.io/badge/Android-3DDC84?style=flat-square&logo=android&logoColor=white"/>
   <img src="https://img.shields.io/badge/Firebase-FFCA28?style=flat-square&logo=firebase&logoColor=black"/>
