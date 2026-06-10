@@ -65,7 +65,7 @@
 
 ---
 
-## 구현 내용
+## 개발 과정 & 문제 해결
 
 > Implemented by [@junhee8649](https://github.com/junhee8649)
 
@@ -77,7 +77,6 @@ Refresh Token까지 만료된 경우 토큰을 전부 삭제하고 로그인 화
 
 - OkHttp `Interceptor`로 모든 요청에 Access Token 자동 주입
 - Refresh Token 만료 시 로그아웃 처리 및 토큰 전체 초기화
-- 일부 사용자에서 발생하던 `SocketTimeoutException` 예외 처리 추가
 
 ### Compose-Legacy View 레이아웃 측정 차이로 인한 WebView 무한 스크롤 불가
 
@@ -97,9 +96,9 @@ Jetpack Compose의 `AndroidView`로 WebView를 감쌀 때, Compose의 레이아�
 
 ### WebView UX 버그 수정
 
-- **키보드 검은 패딩**: WebView에서 키보드가 올라올 때 하단에 검은 영역이 생기는 문제를 `setDecorFitsSystemWindows(window, true)` 설정으로 해결
+- **키보드 검은 패딩**: WebView에서 키보드가 올라올 때 하단에 검은 영역이 생기는 문제를 `windowSoftInputMode=adjustResize`와 WindowInsets(edge-to-edge) 처리로 해결
 - **로그인 만료 alert 중복 노출**: 토큰 만료 시 alert가 반복적으로 뜨는 문제를 플래그 관리로 한 번만 노출되도록 수정
-- **바텀바 중복 스택**: 바텀바 탭 이동 시 스택이 계속 쌓이는 문제를 `popBackStack` 수동 관리로 해결
+- **바텀바 중복 스택**: 바텀바 탭 이동 시 스택이 계속 쌓이는 문제를 `popUpTo(Home)` + `launchSingleTop` 네비게이션 옵션으로 해결
 
 ### 보안 및 코드 품질
 
