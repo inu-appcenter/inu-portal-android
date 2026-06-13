@@ -33,7 +33,9 @@
         android:supportsRtl="true"
         android:enableOnBackInvokedCallback="true"
         android:theme="@style/Theme.INTIP"
+        android:usesCleartextTraffic="true"
         tools:targetApi="33">
+
 
         <activity
             android:name=".MainActivity"
@@ -45,6 +47,13 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".WebViewActivity"
+            android:exported="false"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|uiMode"
+            android:theme="@style/Theme.INTIP" />
+
 
         <service
             android:name=".MyFirebaseMessagingService"

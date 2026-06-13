@@ -1,7 +1,7 @@
 package inu.appcenter.intip_android
 
 object Constants {
-    const val BASE_URL = "https://intip.inuappcenter.kr"
+    val BASE_URL = BuildConfig.BASE_URL
     const val USER_AGENT_SUFFIX = " INTIPApp/1.0.0"
 
     // 뒤로가기 제한 경로

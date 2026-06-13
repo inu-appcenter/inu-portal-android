@@ -18,6 +18,27 @@ configure<com.android.build.api.dsl.ApplicationExtension> {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    buildFeatures {
+        buildConfig = true
+    }
+
+    flavorDimensions.add("environment")
+
+    productFlavors {
+        create("dev") {
+            dimension = "environment"
+            buildConfigField("String", "BASE_URL", "\"https://intip-test.pages.dev/\"")
+        }
+        create("prod") {
+            dimension = "environment"
+            buildConfigField("String", "BASE_URL", "\"https://intip.inuappcenter.kr/\"")
+        }
+        create("local") {
+            dimension = "environment"
+            buildConfigField("String", "BASE_URL", "\"http://192.168.50.167:5173/\"")
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
