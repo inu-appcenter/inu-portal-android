@@ -72,7 +72,7 @@
 ### 로그인 및 JWT 토큰 관리
 
 학번/비밀번호 로그인 후 Access Token과 Refresh Token을 DataStore에 저장합니다.  
-앱 시작 시 토큰 만료 여부를 먼저 확인하고, 만료된 경우에만 Refresh API를 호출해 서버 부담을 줄였습니다.  
+Access Token 수명이 짧아, 초기에는 코루틴으로 만료 직전마다 자동 갱신을 스케줄링했습니다. 하지만 사용 여부와 무관하게 갱신 호출이 반복돼, 앱 진입 시 만료를 확인한 뒤에만 갱신하도록 전환했습니다. 갱신 시 Refresh Token도 함께 재발급(sliding)되어 로그인 유지 경험은 그대로이면서, 백그라운드 작업 없이 갱신 호출을 수명당 1회로 줄였습니다.  
 Refresh Token까지 만료된 경우 토큰을 전부 삭제하고 로그인 화면으로 이동합니다.
 
 - OkHttp `Interceptor`로 모든 요청에 Access Token 자동 주입
