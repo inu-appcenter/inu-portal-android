@@ -553,9 +553,16 @@ class MainActivity : AppCompatActivity() {
                 isBackNavigating = true
                 isReady = false
                 resetBackCrossfadeState()
+                val currentPath = webView.url?.replace(Constants.BASE_URL, "") ?: ""
                 val screenWidth = webView.width.toFloat()
                 val interpolator = PathInterpolator(0.22f, 1f, 0.36f, 1f)
                 val hasBackPreview = backPreviewImage.visibility == View.VISIBLE && backPreviewImage.drawable != null
+
+                if (currentPath == Constants.TIMETABLE_SIMULATOR_PATH && !webView.canGoBack()) {
+                    fadeOutPreviewImage()
+                    finish()
+                    return
+                }
 
                 webView.animate()
                     .translationX(screenWidth)
@@ -886,7 +893,8 @@ class MainActivity : AppCompatActivity() {
     private fun updateBackPressState(url: String?) {
         val currentPath = url?.replace(Constants.BASE_URL, "") ?: ""
         val isRootPath = currentPath in Constants.RESTRICTED_PATHS || currentPath.isEmpty()
-        backPressCallback.isEnabled = webView.canGoBack() && !isRootPath
+        val isSimulatorPath = currentPath == Constants.TIMETABLE_SIMULATOR_PATH
+        backPressCallback.isEnabled = (webView.canGoBack() && !isRootPath) || isSimulatorPath
     }
 
     private fun resolveForwardPreviewIndex(targetUrl: String?): Int? {
