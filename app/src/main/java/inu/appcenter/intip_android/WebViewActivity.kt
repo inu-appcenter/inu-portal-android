@@ -76,6 +76,15 @@ class WebViewActivity : AppCompatActivity() {
         webView.loadUrl(url)
     }
 
+    override fun onBackPressed() {
+        if (shouldGoBackWithinWebView()) {
+            webView.goBack()
+            return
+        }
+
+        super.onBackPressed()
+    }
+
     @SuppressLint("SetJavaScriptEnabled")
     private fun setupWebView(progressBar: android.widget.ProgressBar) {
         webView.settings.apply {
@@ -131,7 +140,7 @@ class WebViewActivity : AppCompatActivity() {
                 },
                 onGoBackRequested = {
                     runOnUiThread {
-                        finish()
+                        handleBackRequest()
                     }
                 }
             ),
@@ -162,6 +171,19 @@ class WebViewActivity : AppCompatActivity() {
         val result = uris?.map { FileUtil.copyUriToCache(this, it) }?.toTypedArray()
         filePathCallback?.onReceiveValue(result)
         filePathCallback = null
+    }
+
+    private fun handleBackRequest() {
+        if (shouldGoBackWithinWebView()) {
+            webView.goBack()
+        } else {
+            finish()
+        }
+    }
+
+    private fun shouldGoBackWithinWebView(): Boolean {
+        val currentPath = webView.url?.removePrefix(Constants.BASE_URL).orEmpty()
+        return currentPath == Constants.TIMETABLE_SIMULATOR_PATH && webView.canGoBack()
     }
 
     private fun openAppSettings() {
