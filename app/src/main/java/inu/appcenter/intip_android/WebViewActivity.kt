@@ -77,7 +77,7 @@ class WebViewActivity : AppCompatActivity() {
     }
 
     override fun onBackPressed() {
-        if (shouldGoBackWithinWebView()) {
+        if (webView.canGoBack()) {
             webView.goBack()
             return
         }
@@ -174,16 +174,11 @@ class WebViewActivity : AppCompatActivity() {
     }
 
     private fun handleBackRequest() {
-        if (shouldGoBackWithinWebView()) {
+        if (webView.canGoBack()) {
             webView.goBack()
         } else {
             finish()
         }
-    }
-
-    private fun shouldGoBackWithinWebView(): Boolean {
-        val currentPath = webView.url?.removePrefix(Constants.BASE_URL).orEmpty()
-        return currentPath == Constants.TIMETABLE_SIMULATOR_PATH && webView.canGoBack()
     }
 
     private fun openAppSettings() {
