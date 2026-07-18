@@ -10,7 +10,8 @@ class WebAppInterface(
     private val onLaunchWebCleanupFinished: ((String) -> Unit)? = null,
     private val onPushState: (() -> Unit)? = null,
     private val onNavigateToRequested: ((String, String) -> Unit)? = null,
-    private val onGoBackRequested: (() -> Unit)? = null
+    private val onGoBackRequested: (() -> Unit)? = null,
+    private val onBackConfirmed: (() -> Unit)? = null
 ) {
     @JavascriptInterface
     fun navigateTo(destination: String, url: String) {
@@ -22,6 +23,12 @@ class WebAppInterface(
     fun goBack() {
         Log.d("WebAppInterface", "goBack")
         onGoBackRequested?.invoke()
+    }
+
+    @JavascriptInterface
+    fun confirmBack() {
+        Log.d("WebAppInterface", "confirmBack")
+        onBackConfirmed?.invoke()
     }
 
     @JavascriptInterface

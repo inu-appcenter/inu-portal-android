@@ -77,12 +77,7 @@ class WebViewActivity : AppCompatActivity() {
     }
 
     override fun onBackPressed() {
-        if (webView.canGoBack()) {
-            webView.goBack()
-            return
-        }
-
-        super.onBackPressed()
+        requestBackWithUnsavedChangesCheck()
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -140,6 +135,11 @@ class WebViewActivity : AppCompatActivity() {
                 },
                 onGoBackRequested = {
                     runOnUiThread {
+                        requestBackWithUnsavedChangesCheck()
+                    }
+                },
+                onBackConfirmed = {
+                    runOnUiThread {
                         handleBackRequest()
                     }
                 }
@@ -171,6 +171,26 @@ class WebViewActivity : AppCompatActivity() {
         val result = uris?.map { FileUtil.copyUriToCache(this, it) }?.toTypedArray()
         filePathCallback?.onReceiveValue(result)
         filePathCallback = null
+    }
+
+    private fun requestBackWithUnsavedChangesCheck() {
+        val script = """
+            (function() {
+              if (window.__intipHasUnsavedChanges && typeof window.__intipHandleNativeBackRequest === 'function') {
+                return window.__intipHandleNativeBackRequest() ? 'blocked' : 'allow';
+              }
+              return 'allow';
+            })();
+        """.trimIndent()
+
+        webView.evaluateJavascript(script) { result ->
+            if (result == "\"blocked\"") {
+                return@evaluateJavascript
+            }
+            runOnUiThread {
+                handleBackRequest()
+            }
+        }
     }
 
     private fun handleBackRequest() {
