@@ -13,6 +13,7 @@ import android.view.ViewGroup
 import android.webkit.ValueCallback
 import android.webkit.WebSettings
 import android.webkit.WebView
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -72,10 +73,23 @@ class WebViewActivity : AppCompatActivity() {
         setContentView(container)
 
         setupWebView(progressBar)
+        setupBackHandler()
 
         webView.loadUrl(url)
     }
 
+    private fun setupBackHandler() {
+        onBackPressedDispatcher.addCallback(
+            this,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    requestBackWithUnsavedChangesCheck()
+                }
+            }
+        )
+    }
+
+    @Deprecated("Use OnBackPressedDispatcher callback")
     override fun onBackPressed() {
         requestBackWithUnsavedChangesCheck()
     }
