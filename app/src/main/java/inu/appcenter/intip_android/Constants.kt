@@ -1,5 +1,7 @@
 package inu.appcenter.intip_android
 
+import android.net.Uri
+
 object Constants {
     val BASE_URL = BuildConfig.BASE_URL
     const val USER_AGENT_SUFFIX = " INTIPApp/1.0.0"
@@ -13,4 +15,17 @@ object Constants {
 
     // 허용 도메인
     val ALLOWED_DOMAINS = listOf(BASE_URL, SIMULATOR_BASE_URL)
+
+    fun isAllowedDomain(url: String?): Boolean {
+        if (url.isNullOrBlank()) return false
+        val targetUri = runCatching { Uri.parse(url) }.getOrNull() ?: return false
+        val targetHost = targetUri.host ?: return false
+
+        return ALLOWED_DOMAINS.any { allowedUrl ->
+            val allowedHost = runCatching { Uri.parse(allowedUrl) }.getOrNull()?.host ?: ""
+            if (allowedHost.isEmpty()) false
+            else targetHost.equals(allowedHost, ignoreCase = true) || targetHost.endsWith(".$allowedHost", ignoreCase = true)
+        }
+    }
 }
+

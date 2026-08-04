@@ -3,9 +3,12 @@ package inu.appcenter.intip_android
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.net.http.SslError
 import android.util.Log
+import android.webkit.SslErrorHandler
 import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
+import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Toast
@@ -36,12 +39,31 @@ class AppWebViewClient(
         onPageCommitVisibleCallback?.invoke(url)
     }
 
+    override fun onReceivedSslError(
+        view: WebView?,
+        handler: SslErrorHandler?,
+        error: SslError?
+    ) {
+        Log.e("AppWebViewClient", "SSL Error occurred: $error")
+        super.onReceivedSslError(view, handler, error)
+    }
+
+    override fun onReceivedHttpError(
+        view: WebView?,
+        request: WebResourceRequest?,
+        errorResponse: WebResourceResponse?
+    ) {
+        super.onReceivedHttpError(view, request, errorResponse)
+        Log.e("AppWebViewClient", "HTTP Error: statusCode=${errorResponse?.statusCode}, url=${request?.url}")
+    }
+
     override fun onReceivedError(
         view: WebView?,
         request: WebResourceRequest?,
         error: WebResourceError?
     ) {
         super.onReceivedError(view, request, error)
+        Log.e("AppWebViewClient", "WebView Error: errorCode=${error?.errorCode}, description=${error?.description}, url=${request?.url}")
         if (request?.isForMainFrame == true) {
             onPageFinishedCallback(request.url.toString())
         }
@@ -55,7 +77,7 @@ class AppWebViewClient(
     override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
         val url = request?.url.toString()
 
-        if (Constants.ALLOWED_DOMAINS.any { url.startsWith(it) }) {
+        if (Constants.isAllowedDomain(url)) {
             val isHandledInternalNavigation = request?.isForMainFrame == true &&
                 request.method.equals("GET", ignoreCase = true) &&
                 request.hasGesture() &&

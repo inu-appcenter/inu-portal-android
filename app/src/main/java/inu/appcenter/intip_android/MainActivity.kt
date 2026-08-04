@@ -57,6 +57,14 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+    private val mainHandler by lazy { android.os.Handler(android.os.Looper.getMainLooper()) }
+    private val splashTimeoutRunnable = Runnable {
+        if (!hasCompletedLaunchRefresh) {
+            Log.w("MainActivity", "스플래시 화면 타임아웃 도달 (5초) - 강제로 launch refresh 완료 처리")
+            hasCompletedLaunchRefresh = true
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
         val splashScreen = installSplashScreen()
@@ -65,6 +73,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         splashScreen.setKeepOnScreenCondition { !hasCompletedLaunchRefresh }
+        mainHandler.postDelayed(splashTimeoutRunnable, 5000)
 
         createNotificationChannel()
         setupViews()
@@ -195,17 +204,8 @@ class MainActivity : AppCompatActivity() {
                 Log.d("MainActivity", "페이지 로드 완료: url=$url")
 
                 if (!hasCompletedLaunchRefresh) {
-                    if (!hasIssuedLaunchReload) {
-                        if (!isAwaitingLaunchWebCleanup) {
-                            isAwaitingLaunchWebCleanup = true
-                            clearServiceWorkersAndCacheStorage()
-                        }
-                        return@AppWebViewClient
-                    }
-
                     hasCompletedLaunchRefresh = true
-                    hasIssuedLaunchReload = false
-                    isAwaitingLaunchWebCleanup = false
+                    mainHandler.removeCallbacks(splashTimeoutRunnable)
                 }
                 
                 pendingNotificationUrl?.let { notificationUrl ->
@@ -299,41 +299,27 @@ class MainActivity : AppCompatActivity() {
     private fun clearServiceWorkersAndCacheStorage() {
         val script = """
             (function() {
-              const tasks = [];
+              var bridge = window.AndroidBridge;
+              function notify() {
+                if (bridge && typeof bridge.onLaunchWebCleanupFinished === 'function') {
+                  try { bridge.onLaunchWebCleanupFinished("done"); } catch(e) {}
+                }
+              }
               try {
-                if ('serviceWorker' in navigator) {
-                  tasks.push(
-                    navigator.serviceWorker.getRegistrations()
-                      .then(function(regs) {
-                        return Promise.allSettled(
-                          regs.map(function(reg) {
-                            return reg.unregister();
-                          })
-                        );
-                      })
-                  );
-                }
-              } catch (e) {}
-              try {
-                if ('caches' in window) {
-                  tasks.push(
-                    caches.keys()
-                      .then(function(names) {
-                        return Promise.allSettled(
-                          names.map(function(name) {
-                            return caches.delete(name);
-                          })
-                        );
-                      })
-                  );
-                }
-              } catch (e) {}
-              Promise.allSettled(tasks).then(function() {
-                if (window.AndroidBridge && window.AndroidBridge.onLaunchWebCleanupFinished) {
-                  window.AndroidBridge.onLaunchWebCleanupFinished("done");
-                }
-              });
-              return "scheduled";
+                var p1 = ('serviceWorker' in navigator) ? navigator.serviceWorker.getRegistrations().catch(function(){return [];}) : Promise.resolve([]);
+                var p2 = ('caches' in window) ? caches.keys().catch(function(){return [];}) : Promise.resolve([]);
+                Promise.all([p1, p2]).then(function(results) {
+                  var regs = results[0] || [];
+                  var keys = results[1] || [];
+                  var unreg = regs.map(function(r) { return r.unregister().catch(function(){}); });
+                  var del = keys.map(function(k) { return caches.delete(k).catch(function(){}); });
+                  return Promise.allSettled(unreg.concat(del));
+                }).catch(function(){}).finally(function() {
+                  notify();
+                });
+              } catch(e) {
+                notify();
+              }
             })();
         """.trimIndent()
 
@@ -426,6 +412,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        mainHandler.removeCallbacksAndMessages(null)
         FcmTokenBridge.detachWebView(webView)
         webView.destroy()
     }
